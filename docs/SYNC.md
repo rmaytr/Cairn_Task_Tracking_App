@@ -19,10 +19,26 @@ approximate size of your encrypted data.
 
 ## How it works
 
+```mermaid
+flowchart LR
+  P["Passphrase"] -->|"PBKDF2-SHA-256<br/>600k iterations, random salt"| K["AES-GCM-256 key<br/>(non-extractable)"]
+  D["{ areas, tasks, tombstones }"] -- JSON --> E["AES-GCM encrypt<br/>random 96-bit IV<br/>AAD = owner + version"]
+  K --> E
+  E -- ciphertext --> V[("Supabase vaults row<br/>RLS: owner only")]
 ```
- passphrase ──PBKDF2-SHA256 (600k, per-user random salt)──► AES-GCM-256 key (non-extractable)
-                                                                 │
- { areas, tasks, tombstones } ──JSON──► AES-GCM(key, random 96-bit IV) ──► ciphertext ──► Supabase `vaults` row
+
+```mermaid
+sequenceDiagram
+  participant A as Device A
+  participant S as Supabase
+  participant B as Device B
+  A->>S: write vault v5
+  B->>S: write vault v5 (based on v4)
+  S-->>B: conflict (version taken)
+  B->>S: read v5
+  B->>B: decrypt, merge per item, re-encrypt
+  B->>S: write v6
+  A->>S: read v6 (refuses anything older than v5)
 ```
 
 1. **Sign in** with a one-time code sent to your email (Supabase Auth, passwordless). No

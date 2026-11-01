@@ -2,6 +2,28 @@
   "name": "cairn",
   "private": true,
   "version": "1.0.0",
+  "description": "A calm, local-first task planner for brains that get overwhelmed: one-box capture, one next step, an optional Claude assistant and end-to-end encrypted sync.",
+  "license": "MIT",
+  "author": "Rodion (https://github.com/rmaytr)",
+  "homepage": "https://rmaytr.github.io/TasksApp/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rmaytr/TasksApp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rmaytr/TasksApp/issues"
+  },
+  "keywords": [
+    "todo",
+    "task-manager",
+    "adhd",
+    "pwa",
+    "local-first",
+    "react",
+    "typescript",
+    "end-to-end-encryption",
+    "claude"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +37,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
-    "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource/instrument-sans": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
     "@supabase/supabase-js": "^2.118.0",
@@ -42,8 +63,6 @@
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.5"
   },
-  "description": "Your to-dos on a radar: today in the middle, someday at the edge. Free, private, no sign-up.",
-  "license": "MIT",
   "engines": {
     "node": ">=20.19"
   }
