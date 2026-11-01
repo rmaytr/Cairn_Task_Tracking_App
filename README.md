@@ -266,6 +266,7 @@ More diagrams (data model, planner, reminders, sync) are in
 | AI cost per captured task | ≈ $0.001 (Claude Haiku 5.5) |
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"pie1": "#1b6e66", "pie2": "#2f8f84", "pie3": "#4fb0a3", "pie4": "#e9a930", "pie5": "#f2c160", "pie6": "#5867e8", "pie7": "#8792ff", "pie8": "#d24d93", "pie9": "#5fa33a", "pie10": "#93d36b", "pie11": "#63655f", "pie12": "#a0a39b", "pieStrokeColor": "#ffffff", "pieOuterStrokeColor": "#ffffff", "pieTitleTextSize": "18px", "pieSectionTextColor": "#ffffff", "pieLegendTextColor": "#63655f", "pieTitleTextColor": "#63655f"}}}%%
 pie showData title Application code by module (lines)
   "UI components" : 4793
   "Parsing, dates, import" : 1424
@@ -282,6 +283,7 @@ pie showData title Application code by module (lines)
 ```
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"pie1": "#1b6e66", "pie2": "#2f8f84", "pie3": "#4fb0a3", "pie4": "#e9a930", "pie5": "#f2c160", "pie6": "#5867e8", "pie7": "#8792ff", "pie8": "#d24d93", "pie9": "#5fa33a", "pie10": "#93d36b", "pie11": "#63655f", "pie12": "#a0a39b", "pieStrokeColor": "#ffffff", "pieOuterStrokeColor": "#ffffff", "pieTitleTextSize": "18px", "pieSectionTextColor": "#ffffff", "pieLegendTextColor": "#63655f", "pieTitleTextColor": "#63655f"}}}%%
 pie showData title Unit and integration tests by area
   "Parsing, dates, import" : 424
   "Encrypted sync" : 105
