@@ -3,7 +3,7 @@
 ## Reporting a problem
 
 Please open a private security advisory on GitHub
-(<https://github.com/rmaytr/TasksApp/security/advisories/new>) instead of a public issue.
+(<https://github.com/rmaytr/Cairn_Task_Tracking_App/security/advisories/new>) instead of a public issue.
 
 ## Design summary
 

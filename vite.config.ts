@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// GitHub Pages serves the app from /TasksApp/; the deploy workflow sets VITE_BASE.
+// GitHub Pages serves the app from /<repo name>/; the deploy workflow sets VITE_BASE. Vercel uses /.
 const base = process.env.VITE_BASE ?? '/'
 
 // Production-only CSP: locked to 'self' plus the few hosts the opt-in features need.

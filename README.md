@@ -6,15 +6,15 @@
 
 **One step at a time.** A calm, local-first task planner for brains that get overwhelmed by long lists.
 
-[![CI](https://github.com/rmaytr/TasksApp/actions/workflows/ci.yml/badge.svg)](https://github.com/rmaytr/TasksApp/actions/workflows/ci.yml)
-[![Deploy](https://github.com/rmaytr/TasksApp/actions/workflows/deploy.yml/badge.svg)](https://github.com/rmaytr/TasksApp/actions/workflows/deploy.yml)
+[![CI](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml)
+[![Deploy](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml)
 ![Tests](https://img.shields.io/badge/tests-846%20unit%20%C2%B7%2033%20e2e-1b6e66)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline-5a0fc8?logo=pwa&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1f201d)](LICENSE)
 
-**[Open the app →](https://rmaytr.github.io/TasksApp/)** · free · no sign-up · works offline
+**[Open the app →](https://cairn-tasks-tawny.vercel.app/)** · free · no sign-up · works offline
 
 <img src="docs/images/today-light.png" alt="Cairn's Today screen: a serif greeting with today's closest deadline, a capture box, a count strip, the Up next card, this week's cairn and the week's tasks" width="100%">
 
@@ -304,8 +304,8 @@ pie showData title Unit and integration tests by area
 Requires **Node.js 20.19+** (22 recommended).
 
 ```bash
-git clone https://github.com/rmaytr/TasksApp.git
-cd TasksApp
+git clone https://github.com/rmaytr/Cairn_Task_Tracking_App.git
+cd Cairn_Task_Tracking_App
 npm install
 npm run dev            # http://localhost:5173
 ```
@@ -329,7 +329,7 @@ Everything works without configuration. To turn on sync or the shared assistant,
 | --- | --- |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Accounts and end-to-end encrypted sync |
 | `VITE_AI_PROXY_URL` | Invite-code access to the assistant (`/api` on Vercel, or the Worker's URL) |
-| `VITE_BASE` | Base path when hosted under a sub-folder (GitHub Pages uses `/TasksApp/`) |
+| `VITE_BASE` | Base path when hosted under a sub-folder (the GitHub Pages workflow sets it to `/<repo name>/`) |
 
 ---
 
@@ -382,7 +382,7 @@ Details: [SECURITY.md](SECURITY.md) · [docs/SYNC.md](docs/SYNC.md) ·
 ## Project structure
 
 ```
-TasksApp/
+Cairn_Task_Tracking_App/
 ├── src/
 │   ├── components/   React screens and UI (Today, Tasks, task panel, Lock in, menus, dialogs)
 │   ├── lib/          Dates, capture parser, area guessing, importers, export

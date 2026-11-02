@@ -5,13 +5,13 @@
   "description": "A calm, local-first task planner for brains that get overwhelmed: one-box capture, one next step, an optional Claude assistant and end-to-end encrypted sync.",
   "license": "MIT",
   "author": "Rodion (https://github.com/rmaytr)",
-  "homepage": "https://rmaytr.github.io/TasksApp/",
+  "homepage": "https://cairn-tasks-tawny.vercel.app/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rmaytr/TasksApp.git"
+    "url": "git+https://github.com/rmaytr/Cairn_Task_Tracking_App.git"
   },
   "bugs": {
-    "url": "https://github.com/rmaytr/TasksApp/issues"
+    "url": "https://github.com/rmaytr/Cairn_Task_Tracking_App/issues"
   },
   "keywords": [
     "todo",

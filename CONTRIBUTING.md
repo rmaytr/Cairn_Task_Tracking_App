@@ -5,8 +5,8 @@ Thanks for taking an interest in Cairn. Bug reports, ideas and pull requests are
 ## Set up
 
 ```bash
-git clone https://github.com/rmaytr/TasksApp.git
-cd TasksApp
+git clone https://github.com/rmaytr/Cairn_Task_Tracking_App.git
+cd Cairn_Task_Tracking_App
 npm install
 npm run dev     # http://localhost:5173  (add ?sample to start with sample tasks)
 ```

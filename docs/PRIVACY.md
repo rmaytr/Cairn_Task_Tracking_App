@@ -78,7 +78,7 @@ served by GitHub Pages, which, like any web host, may log IP addresses of visito
 
 You can use Cairn without an account; export all your data at any time (Settings → Back up);
 delete your account and backup yourself; and ask questions or request deletion by opening an issue at
-[github.com/rmaytr/TasksApp](https://github.com/rmaytr/TasksApp/issues) or contacting Rodion directly.
+[github.com/rmaytr/Cairn_Task_Tracking_App](https://github.com/rmaytr/Cairn_Task_Tracking_App/issues) or contacting Rodion directly.
 
 ## Children
 

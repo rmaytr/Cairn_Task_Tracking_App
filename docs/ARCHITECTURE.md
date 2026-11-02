@@ -343,7 +343,7 @@ Details and the threat model: [SYNC.md](SYNC.md).
 ```mermaid
 flowchart LR
   Dev["Push to main"] --> CI["CI: tsc · oxlint · 846 Vitest tests · build"]
-  Dev --> Deploy["Deploy: build with VITE_BASE=/TasksApp/ and repo variables"] --> Pages["GitHub Pages"]
+  Dev --> Deploy["Deploy: build with VITE_BASE=/repo-name/ and repo variables"] --> Pages["GitHub Pages"]
   Local["Before a PR"] --> E2E["33 Playwright tests<br/>desktop · phone · offline"]
 ```
 

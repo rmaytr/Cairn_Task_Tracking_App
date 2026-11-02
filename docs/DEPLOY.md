@@ -2,14 +2,15 @@
 
 Cairn is two independent pieces:
 
-1. **The app**: static files on GitHub Pages at <https://rmaytr.github.io/TasksApp/>. This works
+1. **The app**: static files, live on Vercel at <https://cairn-tasks-tawny.vercel.app/> (with the
+   assistant proxy, see 1b) and mirrored on GitHub Pages. This works
    on its own: everyone's tasks stay in their own browser and nobody can see anyone else's.
 2. **Sync (optional)**: a free Supabase project that stores each user's *encrypted* backup.
    Add it when you want friends to sign in and sync between devices.
 
 ## 1. The app (GitHub Pages)
 
-Already set up: every push to `main` runs tests, builds with `VITE_BASE=/TasksApp/` and deploys.
+Already set up: every push to `main` runs tests, builds with `VITE_BASE=/<repo name>/` and deploys.
 Pages is set to **Source: GitHub Actions** (repo Settings → Pages).
 
 ## 1b. Private beta on Vercel (app + assistant on one domain)
@@ -47,7 +48,7 @@ device's vault key. That's fine for the local-only app, but **move Cairn to its 
 inviting friends to sync**. The free option is Cloudflare Pages:
 
 1. <https://dash.cloudflare.com> → *Workers & Pages* → *Create* → *Pages* → *Connect to Git* → pick
-   `rmaytr/TasksApp`.
+   `rmaytr/Cairn_Task_Tracking_App`.
 2. Build command `npm run build`, output directory `dist`, and set the env vars from step 6 below
    (leave `VITE_BASE` unset: the site lives at the root of `https://<name>.pages.dev`).
 3. Use that `pages.dev` URL (or a custom domain later) as the Site URL in Supabase.
@@ -89,7 +90,7 @@ inviting friends to sync**. The free option is Cloudflare Pages:
 
 ### Local development with sync
 
-Create `TasksApp/.env.local` (git-ignored) with the same two `VITE_SUPABASE_*` values, then
+Create `.env.local` in the project root (git-ignored) with the same two `VITE_SUPABASE_*` values, then
 `npm run dev`.
 
 ## 3. The assistant (optional)
@@ -118,5 +119,5 @@ only the invite codes you set, only from the origins you allow, and caps each co
 - [ ] Custom SMTP configured and a test code received
 - [ ] You signed in on two devices, created a passphrase on one, unlocked on the other, and saw edits sync
 - [ ] "Delete account" works on a throwaway account
-- [ ] Privacy page reachable at `/TasksApp/privacy.html`
+- [ ] Privacy page reachable at `/privacy.html` (under the repo path on GitHub Pages)
 - [ ] If the assistant proxy is deployed: `ALLOWED_ORIGINS` lists only your app's origin, the KV rate limit is bound, and an Anthropic spend limit is set
