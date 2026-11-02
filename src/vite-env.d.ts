@@ -6,4 +6,5 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_PROVIDERS?: string
   readonly VITE_INVITE_ONLY?: string
   readonly VITE_AI_PROXY_URL?: string
+  readonly VITE_AI_OPEN?: string
 }

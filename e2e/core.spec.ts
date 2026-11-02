@@ -59,7 +59,8 @@ test.describe('capture', () => {
 
     await input.press('Enter')
     await expect(input).toHaveValue('')
-    await expect(toast(page)).toContainText('Added to Orgs')
+    // After 18:00 the evening-before reminder for this task can arrive right after it.
+    await expect(page.locator('.toast', { hasText: 'Added to Orgs' }).or(page.locator('.toast', { hasText: 'Due tomorrow: Email mentee' })).first()).toBeVisible()
 
     await sideButton(page, /^Orgs/).click()
     const row = page.locator('.trow').filter({ has: taskButton(page, 'Email mentee') })

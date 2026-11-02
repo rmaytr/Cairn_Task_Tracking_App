@@ -3,8 +3,11 @@
  * It reuses the Cloudflare Worker's handler (invite codes, failed-code throttle, per-code
  * daily limits, body cap, Zod validation); only the platform glue lives here.
  *
- * Env (Vercel project settings): ANTHROPIC_API_KEY, INVITE_CODES (comma-separated, 16+ chars),
- * optional MODEL, DAILY_LIMIT, ALLOWED_ORIGINS (defaults to this deployment's own origin).
+ * Open access (private beta shared by link): no invite codes; only this deployment's own pages may
+ * call it, and each visitor's IP gets the daily allowance.
+ *
+ * Env (Vercel project settings): ANTHROPIC_API_KEY; optional MODEL, DAILY_LIMIT (per IP per day,
+ * default 150), ALLOWED_ORIGINS (defaults to this deployment's own origin).
  */
 // Relative imports on this server path carry `.js`: Vercel runs them as plain Node ES modules.
 import { handle, type Env, type KvLike } from '../worker/src/handler.js'
@@ -39,7 +42,7 @@ function env(request: Request): Env {
   const host = request.headers.get('host')
   return {
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-    INVITE_CODES: process.env.INVITE_CODES,
+    OPEN_ACCESS: 'true',
     MODEL: process.env.MODEL,
     DAILY_LIMIT: process.env.DAILY_LIMIT,
     // The app calls this from its own origin, which differs per preview deployment.
@@ -48,7 +51,7 @@ function env(request: Request): Env {
   }
 }
 
-// Vercel puts the client address here; the handler keys its failed-code throttle on this header.
+// Vercel puts the client address here; the handler keys its per-visitor allowance on this header.
 function withClientIp(request: Request): Request {
   const ip = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
   if (!ip) return request

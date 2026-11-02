@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { DEFAULT_AREAS } from '../model/defaults'
 import { AREA_COLORS, HORIZONS, REPEATS, type Area, type Task, type Tombstone } from '../model/types'
+import { openProxy } from '../assist/config'
 
 const stepSchema = z.object({ id: z.string(), title: z.string(), done: z.boolean() })
 
@@ -54,7 +55,7 @@ export const prefsSchema = z.object({
   /** Reminder keys already shown, so each fires once. */
   firedReminders: z.array(z.string()).catch([]).transform((keys) => keys.slice(-1000)),
   /** AI assistant: off, the shared proxy, or the user's own API key (stored separately, never synced). */
-  ai: z.enum(['off', 'proxy', 'byok']).catch('off'),
+  ai: z.enum(['off', 'proxy', 'byok']).catch(openProxy ? 'proxy' : 'off'),
   /** "Plan my day" order from the assistant, used on the day it was made. */
   dayPlan: z
     .object({ date: z.string(), ids: z.array(z.string()).max(200), summary: z.string().max(300) })
@@ -73,7 +74,7 @@ export const DEFAULT_PREFS: Prefs = {
   seenTips: [],
   reminders: { enabled: true, morningHour: 9, eveningHour: 18 },
   firedReminders: [],
-  ai: 'off',
+  ai: openProxy ? 'proxy' : 'off',
   dayPlan: null,
 }
 

@@ -158,7 +158,7 @@ Claude turns it into one task with steps in the order they have to happen. It pi
 are marked to start after it. In **Lock in**, Claude orders everything open, explains the first pick,
 and **Make it smaller** breaks a stuck task into steps.
 
-It's off by default. Only the new task's text plus the titles, areas, due dates and priorities of open
+It's off by default (the private beta build turns it on and shares one key). Only the new task's text plus the titles, areas, due dates and priorities of open
 tasks are sent; notes and steps never leave your device.
 
 ### Also

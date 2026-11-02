@@ -1,6 +1,7 @@
 import { del, get, set } from 'idb-keyval'
 import { AiError, type AiTransport } from '../ai/types'
 import { useStore } from '../store/useStore'
+import { openProxy, proxyAvailable, proxyUrl } from './config'
 
 /*
  * The assistant talks to Claude either through the operator's proxy (a Cloudflare Worker
@@ -10,9 +11,7 @@ import { useStore } from '../store/useStore'
 const KEY_SLOT = 'cairn-ai-key'
 const INVITE_SLOT = 'cairn-ai-invite'
 
-export const proxyUrl = ((import.meta.env.VITE_AI_PROXY_URL as string | undefined) ?? '').trim().replace(/\/$/, '')
-// https, localhost, or same-origin ("/api" when the app and proxy deploy together, e.g. on Vercel).
-export const proxyAvailable = /^(https:\/\/|http:\/\/localhost(:\d+)?(\/|$)|\/[a-z])/.test(proxyUrl)
+export { openProxy, proxyAvailable, proxyUrl } from './config'
 
 export const loadApiKey = (): Promise<string | undefined> => get<string>(KEY_SLOT)
 export const saveApiKey = (key: string): Promise<void> => set(KEY_SLOT, key.trim())
@@ -34,8 +33,9 @@ let cached: { mode: string; secret: string; transport: AiTransport } | null = nu
 export async function getTransport(): Promise<AiTransport | null> {
   const mode = useStore.getState().prefs.ai
   if (mode === 'off') return null
-  const secret = (mode === 'byok' ? await loadApiKey() : await loadInvite()) ?? ''
-  if (!secret || (mode === 'proxy' && !proxyAvailable)) return null
+  if (mode === 'proxy' && !proxyAvailable) return null
+  const secret = mode === 'byok' ? ((await loadApiKey()) ?? '') : openProxy ? '' : ((await loadInvite()) ?? '')
+  if (!secret && !(mode === 'proxy' && openProxy)) return null
   if (cached?.mode === mode && cached.secret === secret) return cached.transport
   // Loaded on first use so people who never turn the assistant on don't download the SDK.
   const { createByokTransport, createProxyTransport } = await import('../ai/transports')

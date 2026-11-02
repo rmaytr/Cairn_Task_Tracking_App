@@ -13,7 +13,8 @@ shared with friends. It is not a business, shows no ads, and sells nothing.
 - **We keep the minimum:** your email address (to send sign-in codes) and the encrypted backup.
 - **No analytics, no trackers, no cookies for advertising, no selling or sharing of data.**
 - **You can delete everything** at any time from the app.
-- **The assistant is off unless you turn it on.** When it's on, the text of a new task plus the titles,
+- **The assistant is off unless you turn it on** (in the private beta it starts on; turn it off
+  in Settings → Assistant). When it's on, the text of a new task plus the titles,
   areas, due dates and priorities of your open tasks go to Anthropic's Claude API to be sorted. Notes
   and steps are never sent.
 

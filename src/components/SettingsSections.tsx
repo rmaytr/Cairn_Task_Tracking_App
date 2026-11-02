@@ -4,6 +4,7 @@ import {
   forgetInvite,
   loadApiKey,
   loadInvite,
+  openProxy,
   proxyAvailable,
   resetTransport,
   saveApiKey,
@@ -111,7 +112,7 @@ export function AssistantSettings() {
       <p className="settings__note">
         Let Claude sort new tasks for you: dates, priority, area, steps, and what should come first. When it’s on, the
         text you type plus the titles, areas and due dates of your open tasks are sent to Anthropic’s API. Notes and steps
-        stay on your device. Off by default.
+        stay on your device. {openProxy ? 'On for the beta; turn it off any time.' : 'Off by default.'}
       </p>
       <div className="seg" role="group" aria-label="Assistant">
         <button type="button" aria-pressed={mode === 'off'} onClick={() => choose('off')}>
@@ -119,14 +120,14 @@ export function AssistantSettings() {
         </button>
         {proxyAvailable && (
           <button type="button" aria-pressed={mode === 'proxy'} onClick={() => choose('proxy')}>
-            Invite code
+            {openProxy ? 'Shared (beta)' : 'Invite code'}
           </button>
         )}
         <button type="button" aria-pressed={mode === 'byok'} onClick={() => choose('byok')}>
           My own API key
         </button>
       </div>
-      {mode !== 'off' && (
+      {mode !== 'off' && !(mode === 'proxy' && openProxy) && (
         <form
           className="settings__secret"
           onSubmit={(e) => {

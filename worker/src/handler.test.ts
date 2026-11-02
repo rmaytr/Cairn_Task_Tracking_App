@@ -426,3 +426,35 @@ describe('abuse protection', () => {
     expect(response.status).toBe(200)
   })
 })
+
+describe('open access (link-only beta)', () => {
+  const open = (over: Partial<Env> = {}) => env({ INVITE_CODES: undefined, OPEN_ACCESS: 'true', ...over })
+  const fromIp = (ip: string, headers: Record<string, string> = {}) =>
+    post('/api/analyze', analyzeBody, { 'X-Cairn-Invite': '', 'CF-Connecting-IP': ip, ...headers })
+
+  it('answers the app’s own pages without an invite code', async () => {
+    const response = await handle(fromIp('203.0.113.1'), open(), fakeDeps(analyzeOutput).deps)
+    expect(response.status).toBe(200)
+  })
+
+  it('refuses callers without an allowed Origin, such as scripts', async () => {
+    const noOrigin = new Request('https://proxy.test/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.1' },
+      body: JSON.stringify(analyzeBody),
+    })
+    const { deps, parse } = fakeDeps(analyzeOutput)
+    expect((await handle(noOrigin, open(), deps)).status).toBe(403)
+    expect(parse).not.toHaveBeenCalled()
+  })
+
+  it('gives each IP its own daily allowance and never stores the raw IP', async () => {
+    const kv = new MemoryKv()
+    const config = open({ RATE_KV: kv, DAILY_LIMIT: '1' })
+    const { deps } = fakeDeps(analyzeOutput)
+    expect((await handle(fromIp('203.0.113.1'), config, deps)).status).toBe(200)
+    expect((await handle(fromIp('203.0.113.1'), config, deps)).status).toBe(429)
+    expect((await handle(fromIp('198.51.100.7'), config, deps)).status).toBe(200)
+    expect([...kv.store.keys()].some((k) => k.includes('203.0.113.1'))).toBe(false)
+  })
+})

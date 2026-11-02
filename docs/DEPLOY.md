@@ -16,9 +16,10 @@ Pages is set to **Source: GitHub Actions** (repo Settings → Pages).
 ## 1b. Private beta on Vercel (app + assistant on one domain)
 
 `vercel.json` deploys the static app and two serverless functions, `/api/analyze` and `/api/plan`
-(`api/[route].ts`). The functions reuse the Worker's handler, so invite codes, the failed-code
-throttle, per-code daily limits, the body cap and validation all apply, and your Anthropic key
-stays on the server.
+(`api/[route].ts`). They reuse the Worker's handler in **open access** mode: no invite codes, so
+anyone with the link can use the assistant, but only the app's own pages may call it (requests
+without a matching `Origin` are refused) and each visitor's IP gets a daily allowance. Your
+Anthropic key stays on the server.
 
 1. `vercel link --project cairn-tasks`, then add the environment variables (Project → Settings →
    Environment Variables, or `vercel env add <NAME> production`):
@@ -26,19 +27,17 @@ stays on the server.
    | Name | Value | Secret? |
    | --- | --- | --- |
    | `VITE_AI_PROXY_URL` | `/api` | no (build-time) |
+   | `VITE_AI_OPEN` | `true` (no codes; the assistant is on by default for new visitors) | no (build-time) |
    | `ANTHROPIC_API_KEY` | your Anthropic key | **yes** |
-   | `INVITE_CODES` | comma-separated codes, 16+ characters each | **yes** |
-   | `DAILY_LIMIT` | optional, requests per code per day (default 150) | no |
+   | `DAILY_LIMIT` | optional, requests per visitor IP per day (default 150) | no |
 
 2. `vercel --prod` (or *Redeploy* in the dashboard after changing variables; functions read them at
    deploy time).
-3. Share one link per friend: `https://<your-app>.vercel.app/?invite=<their code>`. Opening it
-   saves the code on their device, turns the assistant on and removes the code from the address
-   bar. Revoke a friend by removing their code and redeploying.
+3. Share the link. Each person's tasks and settings stay in their own browser; nobody can see
+   anyone else's.
 4. Set a monthly spend limit in the Anthropic console. On Vercel the rate-limit counters live in
-   function memory (they reset on cold starts), so the spend limit is the hard stop.
-
-Each person's tasks and settings stay in their own browser; nobody can see anyone else's.
+   function memory (they reset on cold starts), and anyone with the link can use the assistant, so
+   the spend limit is the hard stop.
 
 ## Before turning on sync: give Cairn its own origin
 

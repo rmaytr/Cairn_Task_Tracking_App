@@ -18,7 +18,12 @@ export interface Env {
   ALLOWED_ORIGINS?: string
   /** Defaults to the shared DEFAULT_MODEL. */
   MODEL?: string
-  /** Requests per invite code per UTC day. Defaults to 150. */
+  /**
+   * "true": no invite codes. Only allowed origins may call, and each client IP gets the daily
+   * allowance instead of each code (for a link-only private beta).
+   */
+  OPEN_ACCESS?: string
+  /** Requests per invite code (or per IP in open access) per UTC day. Defaults to 150. */
   DAILY_LIMIT?: string
   /** Required counters: per-code daily limits and failed-code throttling. */
   RATE_KV?: KvLike
@@ -268,6 +273,35 @@ export async function handle(
   }
 }
 
+/** Open access: browsers on an allowed origin only (scripts without one are refused); quota per IP. */
+function openAccessKey(request: Request, originAllowed: boolean): string | null {
+  if (!originAllowed) return null
+  return `ip:${request.headers.get('CF-Connecting-IP') ?? 'unknown'}`
+}
+
+/** Invite mode: the matched code (its quota key), or the error response for a missing or wrong one. */
+async function checkInvite(
+  request: Request,
+  env: Env,
+  kv: KvLike,
+  now: Date,
+  headers: Record<string, string>,
+): Promise<string | Response> {
+  const codes = splitList(env.INVITE_CODES).filter((c) => c.length >= MIN_INVITE_LENGTH)
+  if (codes.length === 0) return fail(500, 'The assistant is not set up yet.', 'config', headers)
+  const failKey = await failedCodeKey(request, now)
+  const failures = Number.parseInt((await kv.get(failKey)) ?? '0', 10) || 0
+  if (failures >= MAX_FAILED_CODES_PER_HOUR) {
+    return fail(429, 'Too many tries. Wait an hour and check the invite code.', 'rate', headers, { 'Retry-After': '3600' })
+  }
+  const code = await matchInviteCode((request.headers.get(INVITE_HEADER) ?? '').trim(), codes)
+  if (code === null) {
+    await safePut(kv, failKey, String(failures + 1))
+    return fail(401, 'That invite code was not accepted.', 'auth', headers)
+  }
+  return code
+}
+
 async function route(request: Request, env: Env, deps: HandlerDeps): Promise<Response> {
   const path = routeOf(request)
   const isPreflight = request.method === 'OPTIONS'
@@ -281,20 +315,12 @@ async function route(request: Request, env: Env, deps: HandlerDeps): Promise<Res
   if (origin !== null && !originAllowed) return fail(403, 'This site is not allowed to use the assistant.', 'auth', headers)
   if (isPreflight) return new Response(null, { status: 204, headers })
 
-  const codes = splitList(env.INVITE_CODES).filter((c) => c.length >= MIN_INVITE_LENGTH)
   const kv = env.RATE_KV
-  if (codes.length === 0 || !kv) return fail(500, 'The assistant is not set up yet.', 'config', headers)
+  if (!kv) return fail(500, 'The assistant is not set up yet.', 'config', headers)
   const now = (deps.now ?? (() => new Date()))()
-  const failKey = await failedCodeKey(request, now)
-  const failures = Number.parseInt((await kv.get(failKey)) ?? '0', 10) || 0
-  if (failures >= MAX_FAILED_CODES_PER_HOUR) {
-    return fail(429, 'Too many tries. Wait an hour and check the invite code.', 'rate', headers, { 'Retry-After': '3600' })
-  }
-  const code = await matchInviteCode((request.headers.get(INVITE_HEADER) ?? '').trim(), codes)
-  if (code === null) {
-    await safePut(kv, failKey, String(failures + 1))
-    return fail(401, 'That invite code was not accepted.', 'auth', headers)
-  }
+  const quotaKey = env.OPEN_ACCESS === 'true' ? openAccessKey(request, originAllowed) : await checkInvite(request, env, kv, now, headers)
+  if (quotaKey === null) return fail(403, 'This site is not allowed to use the assistant.', 'auth', headers)
+  if (quotaKey instanceof Response) return quotaKey
 
   const parsedBody = await parseBody(request, headers)
   if (parsedBody instanceof Response) return parsedBody
@@ -306,7 +332,7 @@ async function route(request: Request, env: Env, deps: HandlerDeps): Promise<Res
   if (!validated.success) return fail(400, 'The request did not have the expected shape.', 'invalid', headers)
   if (apiKey === '') return fail(500, 'The assistant is not set up yet.', 'config', headers)
 
-  if (!(await consumeDailyAllowance(kv, code, dailyLimit(env), now))) {
+  if (!(await consumeDailyAllowance(kv, quotaKey, dailyLimit(env), now))) {
     return fail(429, 'Daily assistant limit reached. It resets tomorrow (UTC).', 'rate', headers, {
       'Retry-After': String(secondsUntilUtcMidnight(now)),
     })
