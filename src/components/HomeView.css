@@ -153,6 +153,7 @@
 }
 
 .home__list.is-wide,
+.home__sample,
 .home__reset {
   grid-column: 1 / -1;
 }
@@ -306,10 +307,12 @@
 }
 
 .home__empty p,
+.home__sample p,
 .home__reset p {
   color: var(--ink-2);
 }
 
+.home__sample,
 .home__reset {
   display: flex !important;
   align-items: center;
@@ -317,6 +320,7 @@
   gap: 16px;
 }
 
+.home__sample h2,
 .home__reset h2 {
   margin-bottom: 4px;
   font-size: var(--step-0);
@@ -383,6 +387,7 @@
     font-size: var(--step-2);
   }
 
+  .home__sample,
   .home__reset {
     flex-direction: column;
     align-items: flex-start !important;

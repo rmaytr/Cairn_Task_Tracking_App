@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { HORIZONS } from '../model/types'
-import { AiError } from './types'
+import { HORIZONS } from '../model/types.js'
+import { AiError } from './types.js'
 import type { AiAnalyzeResult, AiContext, AiPlanResult, AiTaskSuggestion } from './types'
 
 /*

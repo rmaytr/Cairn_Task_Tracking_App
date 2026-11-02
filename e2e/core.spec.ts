@@ -216,7 +216,8 @@ test.describe('reminders', () => {
     await startEmpty(page)
     await captureTask(page, 'Pay the electric bill today')
     await expect(page.locator('.home__finding')).toContainText('“Pay the electric bill” is due today.')
-    await expect(page.getByRole('button', { name: 'Due today' })).toContainText('1')
+    // At least the phone bill; on a weekend "Call home this weekend" is due today too.
+    await expect(page.getByRole('button', { name: 'Due today' }).locator('dd')).not.toHaveText('0')
   })
 })
 
@@ -256,5 +257,18 @@ test.describe('lock in', () => {
     await input.fill('Find a quiet spot')
     await input.press('Enter')
     await expect(page.locator('#now-step')).toHaveText('Find a quiet spot')
+  })
+})
+
+test.describe('sample tasks', () => {
+  test('an empty Today offers sample tasks, and Undo takes them back', async ({ page }) => {
+    await startEmpty(page)
+    await page.getByRole('button', { name: 'Add sample tasks' }).click()
+    await expect(page.getByRole('heading', { name: 'Up next' })).toBeVisible()
+    await expect.poll(() => areaTotal(page)).toBeGreaterThan(10)
+    // At least the phone bill; on a weekend "Call home this weekend" is due today too.
+    await expect(page.getByRole('button', { name: 'Due today' }).locator('dd')).not.toHaveText('0')
+    await toast(page).last().getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(() => areaTotal(page)).toBe(0)
   })
 })

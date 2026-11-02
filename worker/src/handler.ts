@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
-import { DEFAULT_MODEL, callAnalyze, callPlan, type ClaudeClient } from '../../src/ai/claude'
-import { AiError, type AiErrorKind } from '../../src/ai/types'
+import { DEFAULT_MODEL, callAnalyze, callPlan, type ClaudeClient } from '../../src/ai/claude.js'
+import { AiError, type AiErrorKind } from '../../src/ai/types.js'
 
 /** The subset of a Cloudflare KV namespace the rate limiter uses. */
 export interface KvLike {
@@ -236,8 +236,10 @@ async function failedCodeKey(request: Request, now: Date): Promise<string> {
 type Route = '/analyze' | '/plan'
 
 function routeOf(request: Request): Route | null {
+  // Bare on the Worker (/analyze), prefixed on Vercel (/api/analyze).
   const { pathname } = new URL(request.url)
-  return pathname === '/analyze' || pathname === '/plan' ? pathname : null
+  const last = pathname.slice(pathname.lastIndexOf('/'))
+  return last === '/analyze' || last === '/plan' ? last : null
 }
 
 async function parseBody(request: Request, headers: Record<string, string>): Promise<{ body: unknown } | Response> {

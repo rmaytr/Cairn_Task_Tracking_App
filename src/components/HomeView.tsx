@@ -10,6 +10,7 @@ import { useNotificationPermission } from '../reminders/useNotificationPermissio
 import { useStore } from '../store/useStore'
 import { Capture } from './Capture'
 import { Stones } from './Stones'
+import { useLoadSample } from './useSampleTasks'
 import { Icon } from './Icon'
 import { DuePill } from './DueDate'
 import { PriorityMark, TaskRow } from './TaskRow'
@@ -17,6 +18,8 @@ import './HomeView.css'
 
 const TODAY_VISIBLE = 5
 const WEEK_VISIBLE = 5
+/** With fewer open tasks than this, Today offers the sample tasks. */
+const SAMPLE_OFFER_BELOW = 5
 const WEEK_MS = 7 * 86_400_000
 
 function greeting(now: Date): string {
@@ -179,6 +182,16 @@ export function HomeView() {
           </section>
         )}
 
+        {openCount > 0 && openCount < SAMPLE_OFFER_BELOW && (
+          <section className="panel home__sample" aria-labelledby="sample-h">
+            <div>
+              <h2 id="sample-h">See what Cairn can do</h2>
+              <p>Add a handful of example tasks with dates, steps and priorities. One tap undoes it.</p>
+            </div>
+            <SampleButton />
+          </section>
+        )}
+
         {resetDue && (
           <section className="panel home__reset" aria-labelledby="reset-h">
             <div>
@@ -245,6 +258,16 @@ function UpNextCard({ task, now, onSkip }: { task: Task; now: Date; onSkip: () =
   )
 }
 
+/** Adds the example tasks; the "Added 14 tasks" message carries Undo. */
+function SampleButton() {
+  const loadSample = useLoadSample()
+  return (
+    <button type="button" className="btn" onClick={loadSample}>
+      <Icon name="sparkle" size={16} /> Add sample tasks
+    </button>
+  )
+}
+
 function EmptyHome({ hasTasks, onReset }: { hasTasks: boolean; onReset: () => void }) {
   return (
     <section className="panel home__empty">
@@ -254,10 +277,12 @@ function EmptyHome({ hasTasks, onReset }: { hasTasks: boolean; onReset: () => vo
           ? 'That’s fine. Take a breath, or bring them back.'
           : 'Nothing on your list. Type whatever is on your mind above. Cairn sorts it for you.'}
       </p>
-      {hasTasks && (
+      {hasTasks ? (
         <button type="button" className="btn" onClick={onReset}>
           Show tasks again
         </button>
+      ) : (
+        <SampleButton />
       )}
     </section>
   )

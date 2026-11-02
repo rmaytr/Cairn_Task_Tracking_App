@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { proxyAvailable, resetTransport, saveInvite } from './assist/assistant'
 import { initCloud } from './cloud/controller'
 import { useMediaQuery } from './hooks'
 import { onStorageError } from './store/persist'
@@ -99,4 +100,27 @@ export function useCloud(): void {
 
 export function useStorageErrors(): void {
   useEffect(() => onStorageError((message) => useStore.getState().showToast(message, false, true)), [])
+}
+
+/**
+ * A friend's share link (`/?invite=CODE`): save the code on this device, switch the assistant to
+ * invite mode and take the code out of the address bar so it isn't bookmarked or shared further.
+ */
+export function useInviteLink(): void {
+  const hydrated = useStore((s) => s.hydrated)
+  useEffect(() => {
+    if (!hydrated) return
+    const url = new URL(location.href)
+    const code = url.searchParams.get('invite')?.trim()
+    if (!code) return
+    url.searchParams.delete('invite')
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+    if (!proxyAvailable || code.length > 200) return
+    void saveInvite(code).then(() => {
+      resetTransport()
+      const { setPrefs, showToast } = useStore.getState()
+      setPrefs({ ai: 'proxy' })
+      showToast('You’re in the beta. The assistant is on.')
+    })
+  }, [hydrated])
 }

@@ -11,7 +11,8 @@ const KEY_SLOT = 'cairn-ai-key'
 const INVITE_SLOT = 'cairn-ai-invite'
 
 export const proxyUrl = ((import.meta.env.VITE_AI_PROXY_URL as string | undefined) ?? '').trim().replace(/\/$/, '')
-export const proxyAvailable = /^(https:\/\/|http:\/\/localhost(:\d+)?(\/|$))/.test(proxyUrl)
+// https, localhost, or same-origin ("/api" when the app and proxy deploy together, e.g. on Vercel).
+export const proxyAvailable = /^(https:\/\/|http:\/\/localhost(:\d+)?(\/|$)|\/[a-z])/.test(proxyUrl)
 
 export const loadApiKey = (): Promise<string | undefined> => get<string>(KEY_SLOT)
 export const saveApiKey = (key: string): Promise<void> => set(KEY_SLOT, key.trim())
@@ -61,7 +62,10 @@ export function assistantError(error: unknown): string {
     case 'refusal':
       return 'The assistant couldn’t help with that one. It’s saved as you typed it.'
     case 'config':
-      return 'The assistant isn’t set up yet. Add a key or invite code in Settings.'
+      // In invite mode a "config" error is on the server, not something the user can fix.
+      return mode === 'proxy'
+        ? 'The assistant isn’t available right now. The task was saved as you typed it.'
+        : 'The assistant isn’t set up yet. Add a key or invite code in Settings.'
     default:
       return 'The assistant’s answer didn’t make sense, so the task was saved as you typed it.'
   }

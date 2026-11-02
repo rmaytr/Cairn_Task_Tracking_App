@@ -30,3 +30,6 @@ personal/
 test-results/
 playwright-report/
 .taste-skill/
+
+.vercel
+.env*

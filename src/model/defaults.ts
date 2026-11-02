@@ -15,10 +15,10 @@ export const MAX_AREAS = 8
 export const SAMPLE_TEXT = `Classes:
 - Finish problem set 4 for calculus fri
 - Read chapters 6–7 for history @week
-- Study for the biology midterm nov 14 !
+- Study for the biology midterm in 2 weeks !
 Orgs:
 - Book a room for the club social: email facilities, send the poll
-- Make slides for Thursday's board meeting
+- Make slides for Thursday's board meeting tomorrow
 Career:
 - Update resume with summer internship ~m
 - Apply to 3 internships: tailor cover letter, ask for a referral, submit !
@@ -30,4 +30,5 @@ Learning:
 - Finish week 2 of the machine learning course @week
 Life:
 - Renew passport @later
-- Call home this weekend`
+- Call home this weekend
+- Pay the phone bill today`

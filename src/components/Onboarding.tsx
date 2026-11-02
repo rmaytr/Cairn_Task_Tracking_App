@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
-import { parseImport } from '../lib/import'
-import { SAMPLE_TEXT } from '../model/defaults'
 import { useStore } from '../store/useStore'
 import { Dialog } from './Dialog'
 import { Icon } from './Icon'
-import { planImport } from './importPlan'
 import { Logo } from './Logo'
+import { useLoadSample } from './useSampleTasks'
 import './Onboarding.css'
 
 /** First run: a real modal, so nothing behind it can be clicked until you pick a start. */
@@ -16,15 +14,9 @@ export function Onboarding() {
   const show = useStore((s) => !s.prefs.onboarded && s.tasks.length === 0)
   const setPrefs = useStore((s) => s.setPrefs)
   const setImportOpen = useStore((s) => s.setImportOpen)
-  const addTasks = useStore((s) => s.addTasks)
-  const areas = useStore((s) => s.areas)
+  const loadSample = useLoadSample()
 
   const finish = (): void => setPrefs({ onboarded: true })
-  const loadSample = (): void => {
-    const { drafts } = parseImport(SAMPLE_TEXT, new Date())
-    const { rows, newAreas } = planImport(drafts, areas)
-    addTasks(rows.map((r) => ({ draft: r.draft, areaId: r.areaId })), { newAreas })
-  }
 
   // Dev only: `?sample` skips the welcome with sample tasks, so screenshot tools see real screens.
   useEffect(() => {

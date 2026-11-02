@@ -61,6 +61,15 @@ const analyzeBody = { text: 'Publish the domain this weekend', ctx: CTX }
 afterEach(() => vi.restoreAllMocks())
 
 describe('routing and CORS', () => {
+  it('answers on a path prefix too (Vercel serves it at /api/analyze)', async () => {
+    const request = new Request('https://proxy.test/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Cairn-Invite': CODE, Origin: ORIGIN },
+      body: JSON.stringify(analyzeBody),
+    })
+    expect((await handle(request, env(), fakeDeps(analyzeOutput).deps)).status).toBe(200)
+  })
+
   it('answers a preflight from an allowed origin', async () => {
     const response = await handle(
       new Request('https://proxy.test/analyze', { method: 'OPTIONS', headers: { Origin: ORIGIN } }),

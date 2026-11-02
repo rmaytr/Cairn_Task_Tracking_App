@@ -1,9 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { ZodType } from 'zod'
-import { ANALYZE_SYSTEM, PLAN_SYSTEM, analyzeUserMessage, planUserMessage } from './prompts'
-import { AnalyzeModelSchema, PlanModelSchema, sanitizeAnalyze, sanitizePlan } from './schema'
-import { AiError } from './types'
+import { ANALYZE_SYSTEM, PLAN_SYSTEM, analyzeUserMessage, planUserMessage } from './prompts.js'
+import { AnalyzeModelSchema, PlanModelSchema, sanitizeAnalyze, sanitizePlan } from './schema.js'
+import { AiError } from './types.js'
 import type { AiAnalyzeResult, AiContext, AiPlanResult } from './types'
 
 /**

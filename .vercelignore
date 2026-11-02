@@ -1,0 +1,7 @@
+# Never upload personal data or local artefacts to Vercel.
+personal/
+.taste-skill/
+test-results/
+playwright-report/
+dist/
+node_modules/

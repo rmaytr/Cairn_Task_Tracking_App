@@ -328,7 +328,7 @@ Everything works without configuration. To turn on sync or the shared assistant,
 | Variable | Enables |
 | --- | --- |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Accounts and end-to-end encrypted sync |
-| `VITE_AI_PROXY_URL` | Invite-code access to the assistant through the Worker |
+| `VITE_AI_PROXY_URL` | Invite-code access to the assistant (`/api` on Vercel, or the Worker's URL) |
 | `VITE_BASE` | Base path when hosted under a sub-folder (GitHub Pages uses `/TasksApp/`) |
 
 ---
@@ -396,7 +396,8 @@ TasksApp/
 │   ├── cloud/        Supabase client, auth, key storage
 │   ├── radar/        Radar view (SVG)
 │   └── map/          Map view
-├── worker/           Cloudflare Worker: rate-limited Claude proxy
+├── api/              Vercel Functions: the assistant proxy on the app's own domain
+├── worker/           Cloudflare Worker: rate-limited Claude proxy (same handler)
 ├── supabase/         Database migration (tables, RLS, triggers)
 ├── e2e/              Playwright end-to-end tests
 ├── public/           Icons, manifest assets, privacy page
