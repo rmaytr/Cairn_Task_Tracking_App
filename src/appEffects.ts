@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { proxyAvailable, resetTransport, saveInvite } from './assist/assistant'
 import { initCloud } from './cloud/controller'
 import { useMediaQuery } from './hooks'
+import { THEMES, resolveTheme } from './model/themes'
 import { onStorageError } from './store/persist'
 import { parseHash } from './route'
 import { currentHash, useStore, type View } from './store/useStore'
@@ -15,16 +16,30 @@ export const VIEW_TITLE: Record<View, string> = {
 
 const SHORTCUT_VIEWS: readonly View[] = ['home', 'tasks', 'focus']
 
-/** Applies the chosen or system theme to <html data-theme> and the browser chrome color. */
+/** index.html's inline script reads this before first paint, so a chosen theme doesn't flash. */
+const APPEARANCE_KEY = 'cairn-appearance'
+
+/** Applies the theme and text size to <html data-theme / data-text-size> and the browser chrome color. */
 export function useTheme(): void {
+  const hydrated = useStore((s) => s.hydrated)
   const theme = useStore((s) => s.prefs.theme)
+  const textSize = useStore((s) => s.prefs.textSize)
   const systemDark = useMediaQuery('(prefers-color-scheme: dark)')
-  const resolved = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
+  const resolved = resolveTheme(theme, systemDark)
   useEffect(() => {
-    document.documentElement.dataset.theme = resolved
-    const meta = document.querySelector('meta[name="theme-color"]')
-    meta?.setAttribute('content', resolved === 'dark' ? '#0e1412' : '#eef3f0')
-  }, [resolved])
+    // Until saved prefs load, keep what the inline script picked instead of flashing the defaults.
+    if (!hydrated) return
+    const root = document.documentElement
+    root.dataset.theme = resolved
+    root.dataset.textSize = textSize
+    const color = THEMES.find((t) => t.id === resolved)?.color
+    if (color) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
+    try {
+      localStorage.setItem(APPEARANCE_KEY, JSON.stringify({ theme, textSize }))
+    } catch {
+      // Storage blocked (private mode): only the first paint loses the theme.
+    }
+  }, [hydrated, resolved, theme, textSize])
 }
 
 /** Mirrors the route in location.hash so refresh and the back button behave. */

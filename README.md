@@ -164,7 +164,7 @@ tasks are sent; notes and steps never leave your device.
 ### Also
 
 Import from plain text, Markdown checklists (including Obsidian Tasks dates), JSON or Todoist CSV, and
-back up to JSON or Markdown. Light and dark themes, keyboard shortcuts, installable, fully offline.
+back up to JSON or Markdown. Seven themes (warm Notes paper, plum Dusk, OLED Ink, high Contrast and more) and three text sizes, keyboard shortcuts, installable, fully offline.
 
 | Key | Action |
 | --- | --- |
@@ -260,7 +260,7 @@ More diagrams (data model, planner, reminders, sync) are in
 | | |
 | --- | --- |
 | Application code | ~12,100 lines of TypeScript in 139 files |
-| Styles | ~5,200 lines of hand-written CSS, light and dark themes |
+| Styles | ~5,200 lines of hand-written CSS, seven contrast-tested themes |
 | Automated tests | **846** unit and integration tests · **33** end-to-end tests |
 | Runtime dependencies | 10 |
 | AI cost per captured task | ≈ $0.001 (Claude Haiku 5.5) |

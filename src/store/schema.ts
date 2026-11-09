@@ -2,6 +2,10 @@ import { z } from 'zod'
 import { DEFAULT_AREAS } from '../model/defaults'
 import { AREA_COLORS, HORIZONS, REPEATS, type Area, type Task, type Tombstone } from '../model/types'
 import { openProxy } from '../assist/config'
+import { TEXT_SIZES, THEME_PREFS } from '../model/themes'
+
+/** Themes used to be just light/dark; those map to Stone and Night. */
+const LEGACY_THEMES: Record<string, string> = { light: 'stone', dark: 'night' }
 
 const stepSchema = z.object({ id: z.string(), title: z.string(), done: z.boolean() })
 
@@ -39,7 +43,8 @@ export const areaSchema = z.object({
 export const tombstoneSchema = z.object({ id: z.string(), kind: z.enum(['task', 'area']), at: z.number() })
 
 export const prefsSchema = z.object({
-  theme: z.enum(['system', 'light', 'dark']).catch('system'),
+  theme: z.preprocess((v) => (typeof v === 'string' ? (LEGACY_THEMES[v] ?? v) : v), z.enum(THEME_PREFS)).catch('system'),
+  textSize: z.enum(TEXT_SIZES).catch('default'),
   onboarded: z.boolean().catch(false),
   /** Areas used to be hidden by clicking them; nothing can unhide them now, so old values are dropped. */
   hiddenAreas: z.array(z.string()).catch([]).transform((): string[] => []),
@@ -67,6 +72,7 @@ export type Prefs = z.infer<typeof prefsSchema>
 
 export const DEFAULT_PREFS: Prefs = {
   theme: 'system',
+  textSize: 'default',
   onboarded: false,
   hiddenAreas: [],
   lastResetAt: null,

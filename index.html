@@ -1,20 +1,24 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="stone">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Cairn — one step at a time</title>
     <meta name="description" content="A calm, private to-do app: type what's on your mind, Cairn sorts it and shows you one next step. Free, no sign-up." />
-    <meta name="theme-color" content="#eef3f0" />
+    <meta name="theme-color" content="#eef0ec" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:title" content="Cairn — one step at a time" />
     <meta property="og:description" content="Type what's on your mind. Cairn sorts it and shows you one next step." />
     <meta property="og:type" content="website" />
     <script>
-      // Set the theme before first paint to avoid a light flash in dark mode.
+      // Set the theme and text size before first paint (useTheme keeps cairn-appearance current).
       try {
-        if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark'
+        const root = document.documentElement
+        const saved = JSON.parse(localStorage.getItem('cairn-appearance') || '{}')
+        const dark = matchMedia('(prefers-color-scheme: dark)').matches
+        root.dataset.theme = typeof saved.theme === 'string' && saved.theme !== 'system' ? saved.theme : dark ? 'night' : 'stone'
+        if (typeof saved.textSize === 'string') root.dataset.textSize = saved.textSize
       } catch {}
     </script>
   </head>

@@ -1,0 +1,411 @@
+/* =====================================================================
+   Colour themes. Each one is a token block on [data-theme='id'] (the id
+   list lives in src/model/themes.ts), so components never change. The
+   blocks match any element, not only <html>, which is how the Settings
+   previews paint themselves. Rules from the design system still hold in
+   every theme: no shadow at rest, near-black (or near-white) primary
+   action, one data hue, gold only for "soon", berry only on overdue.
+
+   Order matters: Stone comes first because it also sits on :root, so any
+   later block wins on <html> at equal specificity.
+   src/model/__tests__/themes.test.ts checks every block defines every
+   Stone token and passes the contrast pairs.
+   ===================================================================== */
+
+:root,
+[data-theme='stone'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --chrome: #eef0ec;
+  --canvas: #ffffff;
+  --panel: #f2f3ef;
+  --surface: #ffffff;
+  --surface-2: #f7f8f5;
+  --sunken: #e8ebe6;
+  --tonal: #e8ebe6;
+  --tonal-hover: #dde1da;
+  --line: #e6e8e3;
+  --line-strong: #cfd3cc;
+
+  /* Text */
+  --ink: #1f201d;
+  --ink-2: #4a4c47;
+  --ink-3: #63655f;
+
+  /* The one action colour: near-black, white label */
+  --action: #1f201d;
+  --action-hover: #33352f;
+  --on-action: #ffffff;
+
+  /* The one data hue (also selection and focus) */
+  --primary: #1b6e66;
+  --primary-hover: #155a53;
+  --primary-press: #114a44;
+  --on-primary: #ffffff;
+  --primary-soft: #e1efec;
+  --primary-soft-hover: #d2e8e3;
+  --primary-soft-ink: #12524c;
+
+  /* Signals */
+  --sun: #e9a930;
+  --sun-soft: #fbf0d9;
+  --sun-ink: #7a4e00;
+  --danger: #b42341;
+  --danger-soft: #fbe9ed;
+  --ok: #2e7d32;
+  --ok-soft: #e1f2e3;
+
+  /* Areas: dot/fill color, and a darker variant for text (4.5:1 on surfaces) */
+  --area-indigo: #5867e8;
+  --area-magenta: #d24d93;
+  --area-teal: #19a39a;
+  --area-amber: #e59a1a;
+  --area-violet: #9358e0;
+  --area-olive: #5fa33a;
+  --area-sky: #2e95d6;
+  --area-rose: #e2566a;
+  --area-indigo-text: #3d4abd;
+  --area-magenta-text: #a5306d;
+  --area-teal-text: #0b6b65;
+  --area-amber-text: #855400;
+  --area-violet-text: #6634b0;
+  --area-olive-text: #3a6a1f;
+  --area-sky-text: #175f91;
+  --area-rose-text: #ad3247;
+
+  /* Shadows only for what floats: menus, dialogs, the task sheet, toasts. */
+  --shadow: 0 1px 2px rgb(20 22 18 / 0.06), 0 16px 40px -16px rgb(20 22 18 / 0.18);
+  --shadow-lg: 0 2px 6px rgb(20 22 18 / 0.06), 0 28px 64px -24px rgb(20 22 18 / 0.28);
+}
+
+/* Notes: warm cream paper, warm ink, a golden data hue. */
+[data-theme='notes'] {
+  color-scheme: light;
+  --chrome: #f4efe4;
+  --canvas: #fffbf0;
+  --panel: #f7f1e3;
+  --surface: #fffdf7;
+  --surface-2: #fbf6ea;
+  --sunken: #efe7d5;
+  --tonal: #efe7d5;
+  --tonal-hover: #e6dcc6;
+  --line: #ebe3d0;
+  --line-strong: #d8cbae;
+  --ink: #2b2620;
+  --ink-2: #554c41;
+  --ink-3: #6f6558;
+  --action: #2b2620;
+  --action-hover: #3f382f;
+  --on-action: #fffbf0;
+  --primary: #8a6a00;
+  --primary-hover: #745900;
+  --primary-press: #614a00;
+  --on-primary: #fffbf0;
+  --primary-soft: #f7ebc6;
+  --primary-soft-hover: #f1e0ad;
+  --primary-soft-ink: #5e4800;
+  --sun: #e48a2e;
+  --sun-soft: #fbe7d1;
+  --sun-ink: #7f3f00;
+  --danger: #ad2a3c;
+  --danger-soft: #f9e5e3;
+  --ok: #3f7a2b;
+  --ok-soft: #e5efd7;
+  --area-indigo: #5867e8;
+  --area-magenta: #d24d93;
+  --area-teal: #19a39a;
+  --area-amber: #e59a1a;
+  --area-violet: #9358e0;
+  --area-olive: #5fa33a;
+  --area-sky: #2e95d6;
+  --area-rose: #e2566a;
+  --area-indigo-text: #3d4abd;
+  --area-magenta-text: #a5306d;
+  --area-teal-text: #0b6b65;
+  --area-amber-text: #7f5000;
+  --area-violet-text: #6634b0;
+  --area-olive-text: #3a6a1f;
+  --area-sky-text: #175f91;
+  --area-rose-text: #ad3247;
+  --shadow: 0 1px 2px rgb(60 44 20 / 0.07), 0 16px 40px -16px rgb(60 44 20 / 0.2);
+  --shadow-lg: 0 2px 6px rgb(60 44 20 / 0.07), 0 28px 64px -24px rgb(60 44 20 / 0.3);
+}
+
+/* Moss: a calm green light theme. */
+[data-theme='moss'] {
+  color-scheme: light;
+  --chrome: #e8eee4;
+  --canvas: #fbfcf9;
+  --panel: #eef2ea;
+  --surface: #ffffff;
+  --surface-2: #f5f8f2;
+  --sunken: #e2e9dd;
+  --tonal: #e2e9dd;
+  --tonal-hover: #d5dfcf;
+  --line: #dfe6da;
+  --line-strong: #c3cebc;
+  --ink: #1b241c;
+  --ink-2: #435043;
+  --ink-3: #5a665a;
+  --action: #1e2a20;
+  --action-hover: #304032;
+  --on-action: #ffffff;
+  --primary: #2f6b4a;
+  --primary-hover: #255a3d;
+  --primary-press: #1d4a32;
+  --on-primary: #ffffff;
+  --primary-soft: #dfede3;
+  --primary-soft-hover: #cfe4d6;
+  --primary-soft-ink: #1d4f35;
+  --sun: #e3a636;
+  --sun-soft: #f8eed6;
+  --sun-ink: #6f4b05;
+  --danger: #b42341;
+  --danger-soft: #fbe9ed;
+  --ok: #2e7d32;
+  --ok-soft: #e1f2e3;
+  --area-indigo: #5867e8;
+  --area-magenta: #d24d93;
+  --area-teal: #19a39a;
+  --area-amber: #e59a1a;
+  --area-violet: #9358e0;
+  --area-olive: #5fa33a;
+  --area-sky: #2e95d6;
+  --area-rose: #e2566a;
+  --area-indigo-text: #3d4abd;
+  --area-magenta-text: #a5306d;
+  --area-teal-text: #0b6b65;
+  --area-amber-text: #855400;
+  --area-violet-text: #6634b0;
+  --area-olive-text: #3a6a1f;
+  --area-sky-text: #175f91;
+  --area-rose-text: #ad3247;
+  --shadow: 0 1px 2px rgb(18 30 20 / 0.06), 0 16px 40px -16px rgb(18 30 20 / 0.18);
+  --shadow-lg: 0 2px 6px rgb(18 30 20 / 0.06), 0 28px 64px -24px rgb(18 30 20 / 0.28);
+}
+
+/* Contrast: pure white and black, strong borders, a blue data hue. */
+[data-theme='contrast'] {
+  color-scheme: light;
+  --chrome: #ffffff;
+  --canvas: #ffffff;
+  --panel: #f0f0f0;
+  --surface: #ffffff;
+  --surface-2: #f5f5f5;
+  --sunken: #e3e3e3;
+  --tonal: #e3e3e3;
+  --tonal-hover: #cfcfcf;
+  --line: #8a8a8a;
+  --line-strong: #000000;
+  --ink: #000000;
+  --ink-2: #1a1a1a;
+  --ink-3: #3b3b3b;
+  --action: #000000;
+  --action-hover: #262626;
+  --on-action: #ffffff;
+  --primary: #0050d8;
+  --primary-hover: #0042b3;
+  --primary-press: #00368f;
+  --on-primary: #ffffff;
+  --primary-soft: #e3ecff;
+  --primary-soft-hover: #d0dfff;
+  --primary-soft-ink: #00307f;
+  --sun: #f0a800;
+  --sun-soft: #fff0c4;
+  --sun-ink: #573a00;
+  --danger: #a8002a;
+  --danger-soft: #ffe4ea;
+  --ok: #1a6b1f;
+  --ok-soft: #dff1e0;
+  --area-indigo: #4250d6;
+  --area-magenta: #bd3680;
+  --area-teal: #0e8a82;
+  --area-amber: #d48806;
+  --area-violet: #7d42cc;
+  --area-olive: #4a8a26;
+  --area-sky: #1c7fc0;
+  --area-rose: #cf3c52;
+  --area-indigo-text: #27318f;
+  --area-magenta-text: #7f1f52;
+  --area-teal-text: #054d48;
+  --area-amber-text: #5e3b00;
+  --area-violet-text: #4d2386;
+  --area-olive-text: #2a4d16;
+  --area-sky-text: #0e4670;
+  --area-rose-text: #85202f;
+  --shadow: 0 0 0 1px #000000, 0 16px 40px -16px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 0 0 1px #000000, 0 28px 64px -24px rgb(0 0 0 / 0.35);
+}
+
+[data-theme='night'] {
+  color-scheme: dark;
+  --chrome: #0d0e0d;
+  --canvas: #151615;
+  --panel: #1c1d1b;
+  --surface: #232421;
+  --surface-2: #1f201e;
+  --sunken: #0f100f;
+  --tonal: #2c2e2a;
+  --tonal-hover: #363934;
+  --line: #2c2e2a;
+  --line-strong: #41443e;
+  --ink: #f2f3ef;
+  --ink-2: #c6c9c2;
+  --ink-3: #9da19a;
+  --action: #f2f3ef;
+  --action-hover: #ffffff;
+  --on-action: #151615;
+  --primary: #5cc8b6;
+  --primary-hover: #7ad6c7;
+  --primary-press: #4ab7a5;
+  --on-primary: #06231f;
+  --primary-soft: #17312d;
+  --primary-soft-hover: #1d3d38;
+  --primary-soft-ink: #a9e8dc;
+  --sun: #f2c160;
+  --sun-soft: #352c17;
+  --sun-ink: #f6d58e;
+  --danger: #ff8aa0;
+  --danger-soft: #3a1d24;
+  --ok: #6fd39c;
+  --ok-soft: #173325;
+  --area-indigo: #8792ff;
+  --area-magenta: #f07ab6;
+  --area-teal: #4fd1c5;
+  --area-amber: #f5b54a;
+  --area-violet: #b892ff;
+  --area-olive: #93d36b;
+  --area-sky: #6cc0f5;
+  --area-rose: #ff8597;
+  --area-indigo-text: var(--area-indigo);
+  --area-magenta-text: var(--area-magenta);
+  --area-teal-text: var(--area-teal);
+  --area-amber-text: var(--area-amber);
+  --area-violet-text: var(--area-violet);
+  --area-olive-text: var(--area-olive);
+  --area-sky-text: var(--area-sky);
+  --area-rose-text: var(--area-rose);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 18px 44px -16px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 2px 8px rgb(0 0 0 / 0.45), 0 30px 70px -20px rgb(0 0 0 / 0.8);
+}
+
+/* Dusk: a dark plum for evenings, lavender data hue. */
+[data-theme='dusk'] {
+  color-scheme: dark;
+  --chrome: #110e18;
+  --canvas: #17141f;
+  --panel: #1c1826;
+  --surface: #201c2b;
+  --surface-2: #1d1928;
+  --sunken: #120f19;
+  --tonal: #2a2538;
+  --tonal-hover: #352f46;
+  --line: #2a2538;
+  --line-strong: #433b5a;
+  --ink: #ece8f5;
+  --ink-2: #c5bed8;
+  --ink-3: #a098b6;
+  --action: #ece8f5;
+  --action-hover: #ffffff;
+  --on-action: #17141f;
+  --primary: #b79cff;
+  --primary-hover: #c9b5ff;
+  --primary-press: #a587f5;
+  --on-primary: #1c1236;
+  --primary-soft: #2c2444;
+  --primary-soft-hover: #362d53;
+  --primary-soft-ink: #dacdff;
+  --sun: #f2c160;
+  --sun-soft: #352b1c;
+  --sun-ink: #f6d58e;
+  --danger: #ff8fae;
+  --danger-soft: #3b1d2c;
+  --ok: #74d6a0;
+  --ok-soft: #1a3229;
+  --area-indigo: #8f99ff;
+  --area-magenta: #f283bd;
+  --area-teal: #56d3c8;
+  --area-amber: #f5b85a;
+  --area-violet: #c2a3ff;
+  --area-olive: #99d474;
+  --area-sky: #74c4f5;
+  --area-rose: #ff8c9e;
+  --area-indigo-text: var(--area-indigo);
+  --area-magenta-text: var(--area-magenta);
+  --area-teal-text: var(--area-teal);
+  --area-amber-text: var(--area-amber);
+  --area-violet-text: var(--area-violet);
+  --area-olive-text: var(--area-olive);
+  --area-sky-text: var(--area-sky);
+  --area-rose-text: var(--area-rose);
+  --shadow: 0 1px 2px rgb(5 2 12 / 0.45), 0 18px 44px -16px rgb(5 2 12 / 0.75);
+  --shadow-lg: 0 2px 8px rgb(5 2 12 / 0.5), 0 30px 70px -20px rgb(5 2 12 / 0.85);
+}
+
+/* Ink: true black for OLED screens; lines, not shadows, lift what floats. */
+[data-theme='ink'] {
+  color-scheme: dark;
+  --chrome: #000000;
+  --canvas: #000000;
+  --panel: #0d0d0d;
+  --surface: #141414;
+  --surface-2: #0f0f0f;
+  --sunken: #1a1a1a;
+  --tonal: #1f1f1f;
+  --tonal-hover: #2b2b2b;
+  --line: #242424;
+  --line-strong: #3d3d3d;
+  --ink: #f5f5f5;
+  --ink-2: #c9c9c9;
+  --ink-3: #a3a3a3;
+  --action: #f5f5f5;
+  --action-hover: #ffffff;
+  --on-action: #000000;
+  --primary: #5cc8b6;
+  --primary-hover: #7ad6c7;
+  --primary-press: #4ab7a5;
+  --on-primary: #04201c;
+  --primary-soft: #0f2a26;
+  --primary-soft-hover: #143530;
+  --primary-soft-ink: #a9e8dc;
+  --sun: #f2c160;
+  --sun-soft: #2b2312;
+  --sun-ink: #f6d58e;
+  --danger: #ff8aa0;
+  --danger-soft: #30141b;
+  --ok: #6fd39c;
+  --ok-soft: #10291c;
+  --area-indigo: #8792ff;
+  --area-magenta: #f07ab6;
+  --area-teal: #4fd1c5;
+  --area-amber: #f5b54a;
+  --area-violet: #b892ff;
+  --area-olive: #93d36b;
+  --area-sky: #6cc0f5;
+  --area-rose: #ff8597;
+  --area-indigo-text: var(--area-indigo);
+  --area-magenta-text: var(--area-magenta);
+  --area-teal-text: var(--area-teal);
+  --area-amber-text: var(--area-amber);
+  --area-violet-text: var(--area-violet);
+  --area-olive-text: var(--area-olive);
+  --area-sky-text: var(--area-sky);
+  --area-rose-text: var(--area-rose);
+  --shadow: 0 0 0 1px #2b2b2b, 0 18px 44px -16px rgb(0 0 0 / 0.9);
+  --shadow-lg: 0 0 0 1px #2b2b2b, 0 30px 70px -20px rgb(0 0 0 / 0.95);
+}
+
+/* Tokens built from other tokens are re-declared on every themed element,
+   so a preview resolves them with its own theme rather than the page's. */
+:root,
+[data-theme] {
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 32%, transparent);
+  --bg: var(--canvas);
+  --rule: var(--line);
+  --field-border: var(--line-strong);
+  --hub: var(--ink);
+  --on-hub: var(--surface);
+  --ring-line: color-mix(in srgb, var(--ink) 12%, transparent);
+  --ring-fill: color-mix(in srgb, var(--primary) 4%, transparent);
+}
