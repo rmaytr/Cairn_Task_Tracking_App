@@ -23,6 +23,13 @@ describe('tasks', () => {
     expect(state().prefs.onboarded).toBe(true)
   })
 
+  it('keeps a repeat parsed at capture', () => {
+    const id = state().addTask({ title: 'Water plants', repeat: 'weekly' }, 'life')
+    expect(state().tasks.find((t) => t.id === id)?.repeat).toBe('weekly')
+    const plain = state().addTask({ title: 'Buy milk', repeat: 'none' }, 'life')
+    expect(state().tasks.find((t) => t.id === plain)).not.toHaveProperty('repeat')
+  })
+
   it('completes a task, records the ripple, and undoes it', () => {
     const id = state().addTask({ title: 'Ship it' }, 'projects')
     state().setDone(id, true)
