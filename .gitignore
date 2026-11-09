@@ -33,3 +33,6 @@ playwright-report/
 
 .vercel
 .env*
+
+# Agent worktrees
+.claude/worktrees/
