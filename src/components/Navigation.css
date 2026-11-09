@@ -73,6 +73,11 @@
   outline-offset: 2px;
 }
 
+/* Positioned: drag hit-testing measures the areas by their offsets inside it. */
+.side__areas {
+  position: relative;
+}
+
 .side__nav,
 .side__areas ul {
   display: grid;
@@ -248,6 +253,41 @@
   color: var(--ink);
 }
 
+/* Reorder grip: in the gutter left of the pill on hover/focus with a mouse; always there on touch. */
+.side__grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  color: var(--ink-3);
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.side__grip:hover {
+  color: var(--ink);
+}
+
+.side__area-item:hover .side__grip,
+.side__area-item:focus-within .side__grip {
+  opacity: 1;
+}
+
+/* The lifted copy keeps the pill's shape. */
+.side__area-item.drag-ghost {
+  border-radius: 999px;
+}
+
+.side__areas .drop-gap {
+  border-radius: 999px;
+}
+
 .side__rename {
   display: flex;
   align-items: center;
@@ -272,6 +312,23 @@
 @media (pointer: coarse) {
   .side__dots {
     opacity: 1;
+  }
+
+  .side__grip {
+    left: 0;
+    width: 30px;
+    opacity: 0.75;
+  }
+
+  .side__area-item .side__area {
+    padding-left: 30px;
+  }
+
+  /* A long press picks the area up: no text selection or iOS callout in the way. */
+  .side__area {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .side__area-item .side__count,

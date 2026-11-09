@@ -15,6 +15,7 @@ import { useLoadSample } from './useSampleTasks'
 import { Icon } from './Icon'
 import { DuePill } from './DueDate'
 import { PriorityMark, TaskRow } from './TaskRow'
+import { sortItems, useTaskReorder, type OrderGroup } from './useTaskReorder'
 import './HomeView.css'
 
 const TODAY_VISIBLE = 5
@@ -77,8 +78,15 @@ export function HomeView() {
     return [...local].sort((a, b) => (rank.get(a.task.id) ?? 1e6) - (rank.get(b.task.id) ?? 1e6))
   }, [visible, now, dayPlan])
   const next = plan.find((p) => p.blockedBy.length === 0 && !p.task.waiting && !skipped.includes(p.task.id))?.task
-  const today = plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'today')
-  const week = plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'week')
+  const listSort = useStore((s) => s.prefs.listSort)
+  // In My order the panels follow the ranks, like All tasks; otherwise the planner's order.
+  const arrange = (items: typeof plan): typeof plan => (listSort.sort === 'manual' ? sortItems(items, 'manual', listSort.reverse) : items)
+  const today = arrange(plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'today'))
+  const week = arrange(plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'week'))
+  const todayGroup: OrderGroup = { key: 'today', title: 'Today', horizon: 'today', items: today }
+  const weekGroup: OrderGroup = { key: 'week', title: 'This week', horizon: 'week', items: week }
+  // The two panels sit side by side on wide screens, so the lifted row follows the pointer sideways too.
+  const { rootRef, drag, rowReorder, withGap, announcer } = useTaskReorder([todayGroup, weekGroup], listSort, now, { axis: 'xy' })
   const heads = useMemo(() => headsUp(visible, now), [visible, now])
   const done = doneThisWeek(tasks, now)
   const openCount = plan.length
@@ -132,7 +140,7 @@ export function HomeView() {
         ))}
       </dl>
 
-      <div className="home__grid">
+      <div className="home__grid" ref={rootRef}>
         {slipped.length >= FRESH_START_MIN && <FreshStart tasks={slipped} now={now} />}
 
         {next ? (
@@ -159,7 +167,7 @@ export function HomeView() {
         </section>
 
         {today.length > 0 && (
-          <section className={`panel home__list${week.length > 0 ? '' : ' is-wide'}`} aria-labelledby="today-h">
+          <section className={`panel home__list${week.length > 0 ? '' : ' is-wide'}`} aria-labelledby="today-h" {...drag.groupProps('today')}>
             <div className="home__panel-head">
               <h2 id="today-h">
                 Today <span className="num home__count">{today.length}</span>
@@ -167,9 +175,12 @@ export function HomeView() {
             </div>
             <ul className="trows">
               <AnimatePresence initial={false}>
-                {shownToday.map((p) => (
-                  <TaskRow key={p.task.id} task={p.task} now={now} blockedBy={blockerName(p.blockedBy)} />
-                ))}
+                {withGap(
+                  todayGroup,
+                  shownToday.map((p) => (
+                    <TaskRow key={p.task.id} task={p.task} now={now} blockedBy={blockerName(p.blockedBy)} reorder={rowReorder(p.task, todayGroup)} />
+                  )),
+                )}
               </AnimatePresence>
             </ul>
             {today.length > TODAY_VISIBLE && (
@@ -181,7 +192,7 @@ export function HomeView() {
         )}
 
         {week.length > 0 && (
-          <section className={`panel home__list${today.length > 0 ? '' : ' is-wide'}`} aria-labelledby="week-h">
+          <section className={`panel home__list${today.length > 0 ? '' : ' is-wide'}`} aria-labelledby="week-h" {...drag.groupProps('week')}>
             <div className="home__panel-head">
               <h2 id="week-h">
                 This week <span className="num home__count">{week.length}</span>
@@ -192,9 +203,12 @@ export function HomeView() {
             </div>
             <ul className="trows">
               <AnimatePresence initial={false}>
-                {week.slice(0, WEEK_VISIBLE).map((p) => (
-                  <TaskRow key={p.task.id} task={p.task} now={now} blockedBy={blockerName(p.blockedBy)} />
-                ))}
+                {withGap(
+                  weekGroup,
+                  week.slice(0, WEEK_VISIBLE).map((p) => (
+                    <TaskRow key={p.task.id} task={p.task} now={now} blockedBy={blockerName(p.blockedBy)} reorder={rowReorder(p.task, weekGroup)} />
+                  )),
+                )}
               </AnimatePresence>
             </ul>
           </section>
@@ -211,6 +225,7 @@ export function HomeView() {
             <SampleButton />
           </section>
         )}
+        {announcer}
 
         {resetDue && (
           <section className="panel home__reset" aria-labelledby="reset-h">

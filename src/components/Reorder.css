@@ -32,7 +32,7 @@
   visibility: hidden;
 }
 
-body > .drag-ghost {
+:is(body, dialog) > .drag-ghost {
   z-index: 1000;
   box-sizing: border-box;
   border-radius: var(--radius-m);
@@ -45,7 +45,7 @@ body > .drag-ghost {
   will-change: transform;
 }
 
-body > .drag-ghost.is-settling {
+:is(body, dialog) > .drag-ghost.is-settling {
   box-shadow: 0 0 0 transparent;
 }
 

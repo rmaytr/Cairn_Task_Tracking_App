@@ -122,7 +122,9 @@
 }
 
 /* ---------- Panels ---------- */
+/* Positioned: drag hit-testing measures the Today and This week rows by their offsets inside it. */
 .home__grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   align-items: start;

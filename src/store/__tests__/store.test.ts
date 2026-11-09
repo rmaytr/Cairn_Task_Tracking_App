@@ -232,6 +232,34 @@ describe('moveArea', () => {
   })
 })
 
+describe('reorderArea', () => {
+  const ids = () => state().areas.map((a) => a.id)
+
+  it('moves an area to an index as one undoable change and bumps only its updatedAt', () => {
+    const before = state().areas.map((a) => ({ ...a }))
+    const [first, second, third] = ids()
+    state().reorderArea(first!, 2)
+    expect(ids().slice(0, 3)).toEqual([second, third, first])
+    const moved = state().areas.find((a) => a.id === first)!
+    expect(moved.updatedAt).toBeGreaterThan(before[0]!.updatedAt ?? 0)
+    expect(state().areas.find((a) => a.id === second)!.updatedAt).toBe(before[1]!.updatedAt)
+    expect(state().toast).toMatchObject({ message: `Moved ‘${moved.name}’`, undoable: true })
+    state().undo()
+    expect(ids()).toEqual(before.map((a) => a.id))
+  })
+
+  it('clamps the index and ignores a move to the same place or an unknown id', () => {
+    const order = ids()
+    const last = order.at(-1)!
+    state().reorderArea(last, 99)
+    state().reorderArea('nope', 0)
+    expect(ids()).toEqual(order)
+    expect(state().toast).toBeNull()
+    state().reorderArea(last, -5)
+    expect(ids()[0]).toBe(last)
+  })
+})
+
 describe('reorderTasks', () => {
   const add = (title: string, horizon: 'today' | 'week' = 'today') => state().addTask({ title, horizon }, 'classes')
   const rankOf = (id: string) => state().tasks.find((t) => t.id === id)?.rank

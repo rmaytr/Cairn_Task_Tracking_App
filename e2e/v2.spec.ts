@@ -148,7 +148,7 @@ test.describe('area menu', () => {
     await menu.getByRole('button', { name: 'Delete' }).click()
     await expect(sideButton(page, /^Study/)).toHaveCount(0)
     await expect.poll(() => areaTotal(page)).toBe(before)
-    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await toast(page).filter({ hasText: 'Removed area' }).getByRole('button', { name: 'Undo' }).click()
     await expect(sideButton(page, /^Study/)).toBeVisible()
   })
 

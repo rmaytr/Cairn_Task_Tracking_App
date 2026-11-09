@@ -1,16 +1,19 @@
 import { motion } from 'motion/react'
-import { useId, useMemo, useRef, useState, type DragEvent } from 'react'
-import { areaStyle } from '../hooks'
+import { useId, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { areaStyle, useReducedMotion } from '../hooks'
 import { isTaskDrag, TASK_DRAG_TYPE } from '../lib/drag'
+import { gapPosition } from '../lib/reorder'
 import { MAX_AREAS } from '../model/defaults'
 import type { Area } from '../model/types'
 import { useStore, type View } from '../store/useStore'
 import { AreaMenu } from './AreaMenu'
 import { Dialog } from './Dialog'
+import { DropGap } from './DropGap'
 import { Icon, type IconName } from './Icon'
 import { Logo } from './Logo'
 import { useMenu } from './useMenu'
 import { SyncBadge } from './SyncBadge'
+import { moveKeyDelta, useReorderDrag } from './useReorderDrag'
 import './Navigation.css'
 
 const NAV: readonly { view: View; label: string; icon: IconName; key: string }[] = [
@@ -120,24 +123,32 @@ function NavPill() {
   return <motion.span layoutId="side-pill" className="side__pill" transition={{ type: 'spring', stiffness: 520, damping: 42 }} />
 }
 
+const AREAS_SCOPE = 'areas'
+
 interface AreaItemProps {
   area: Area
   count: number
   current: boolean
   onOpen: () => void
+  drag: ReturnType<typeof useReorderDrag>
+  /** Alt+Up/Down: one place up or down. */
+  onMove: (delta: -1 | 1) => void
 }
 
 /**
  * One area in the sidebar: click to open its page, ⋯ (or right-click) for its actions,
- * rename in place, and drop a dragged task on it to move the task there.
+ * rename in place, drop a dragged task on it to move the task there, and drag it (grip, mouse
+ * press-and-move, touch long-press) or press Alt+Up/Down to reorder.
  */
-function AreaItem({ area, count, current, onOpen }: AreaItemProps) {
+function AreaItem({ area, count, current, onOpen, drag, onMove }: AreaItemProps) {
   const updateArea = useStore((s) => s.updateArea)
   const moveTask = useStore((s) => s.moveTask)
   const menu = useMenu()
   const dotsRef = useRef<HTMLButtonElement>(null)
   const [renaming, setRenaming] = useState(false)
   const [dropping, setDropping] = useState(false)
+  const reduce = useReducedMotion()
+  const dragState = drag.stateOf(area.id)
 
   if (renaming) {
     return (
@@ -181,7 +192,10 @@ function AreaItem({ area, count, current, onOpen }: AreaItemProps) {
   }
 
   return (
-    <li
+    <motion.li
+      {...drag.itemProps(area.id)}
+      layout={!reduce && dragState !== 'lifted'}
+      transition={{ duration: 0.18 }}
       className={`side__area-item${menu.anchor ? ' has-menu' : ''}${dropping ? ' is-drop' : ''}`}
       onDragOver={(e) => {
         if (!isTaskDrag(e)) return
@@ -196,12 +210,23 @@ function AreaItem({ area, count, current, onOpen }: AreaItemProps) {
         if (id) moveTask(id, { areaId: area.id }, `Moved to ${area.name}`)
       }}
     >
+      <span className="side__grip" aria-hidden="true" title="Drag to reorder (Alt+Up/Down)" onPointerDownCapture={(e) => drag.onHandleDown(e, area.id, AREAS_SCOPE)}>
+        <Icon name="grip" size={14} />
+      </span>
       <button
         type="button"
         className="side__area"
         style={areaStyle(area)}
         aria-current={current ? 'page' : undefined}
+        aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
         onClick={onOpen}
+        onPointerDown={(e) => drag.onPressDown(e, area.id, AREAS_SCOPE, true)}
+        onKeyDown={(e) => {
+          const delta = moveKeyDelta(e)
+          if (!delta) return
+          e.preventDefault()
+          onMove(delta)
+        }}
         onContextMenu={(e) => {
           e.preventDefault()
           // The keyboard menu key reports (0, 0): open beside the ⋯ instead.
@@ -225,7 +250,7 @@ function AreaItem({ area, count, current, onOpen }: AreaItemProps) {
         <Icon name="dots" size={18} />
       </button>
       <AreaMenu area={area} anchor={menu.anchor} onClose={menu.close} onRename={() => setRenaming(true)} />
-    </li>
+    </motion.li>
   )
 }
 
@@ -236,28 +261,58 @@ function AreaNav({ onPick }: { onPick?: () => void }) {
   const view = useStore((s) => s.view)
   const navigate = useStore((s) => s.navigate)
   const setNewAreaOpen = useStore((s) => s.setNewAreaOpen)
+  const reorderArea = useStore((s) => s.reorderArea)
   const counts = useOpenCounts()
   const headingId = useId()
+  const rootRef = useRef<HTMLElement>(null)
+  const [said, setSaid] = useState({ text: '', n: 0 })
+  const announce = (text: string): void => setSaid((s) => ({ text, n: s.n + 1 }))
+
+  const move = (id: string, to: number): void => {
+    const area = areas.find((a) => a.id === id)
+    if (!area) return
+    reorderArea(id, to)
+    announce(`Moved ‘${area.name}’ to position ${to + 1} of ${areas.length}`)
+  }
+  const drag = useReorderDrag(AREAS_SCOPE, rootRef, ({ id, index }) => move(id, index))
+  const nudge = (id: string, delta: -1 | 1): void => {
+    const from = areas.findIndex((a) => a.id === id)
+    const to = from + delta
+    if (to < 0 || to >= areas.length) {
+      announce(`‘${areas[from]?.name ?? 'This area'}’ is already ${delta < 0 ? 'first' : 'last'}`)
+      return
+    }
+    move(id, to)
+    // Reordering moves the item's DOM node, which can drop focus.
+    requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>(`[data-drag-id="${CSS.escape(id)}"] .side__area`)?.focus())
+  }
+
+  const rows: ReactNode[] = areas.map((area) => (
+    <AreaItem
+      key={area.id}
+      area={area}
+      count={counts.get(area.id) ?? 0}
+      current={view === 'tasks' && areaFilter === area.id}
+      onOpen={() => {
+        navigate({ view: 'tasks', area: area.id })
+        onPick?.()
+      }}
+      drag={drag}
+      onMove={(delta) => nudge(area.id, delta)}
+    />
+  ))
+  const { spot } = drag
+  if (spot) rows.splice(gapPosition(areas.map((a) => a.id !== spot.id), spot.index), 0, <DropGap key="drop-gap" spot={spot} />)
 
   return (
-    <section className="side__areas" aria-labelledby={headingId}>
+    <section className="side__areas" aria-labelledby={headingId} ref={rootRef}>
       <h2 id={headingId} className="side__heading">
         Areas
       </h2>
-      <ul>
-        {areas.map((area) => (
-          <AreaItem
-            key={area.id}
-            area={area}
-            count={counts.get(area.id) ?? 0}
-            current={view === 'tasks' && areaFilter === area.id}
-            onOpen={() => {
-              navigate({ view: 'tasks', area: area.id })
-              onPick?.()
-            }}
-          />
-        ))}
-      </ul>
+      <ul {...drag.groupProps(AREAS_SCOPE)}>{rows}</ul>
+      <p className="visually-hidden" aria-live="polite">
+        <span key={said.n}>{said.text}</span>
+      </p>
       {areas.length < MAX_AREAS && (
         <button
           type="button"

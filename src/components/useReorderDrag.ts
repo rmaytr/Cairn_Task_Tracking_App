@@ -25,6 +25,11 @@ export interface DropResult extends DropSpot {
 
 export type DragState = 'lifted' | 'settling'
 
+export interface ReorderOptions {
+  /** 'xy' lets the copy follow the pointer sideways too, for groups laid out side by side. */
+  axis?: 'y' | 'xy'
+}
+
 const LONG_PRESS_MS = 350
 /** Movement that turns a press into a scroll or swipe, so the long press gives up. */
 const SLOP_PX = 8
@@ -44,8 +49,13 @@ interface Session {
   /** Pointer offset from the item's top, so the copy stays where it was grabbed. */
   grabY: number
   startTop: number
+  startLeft: number
+  width: number
+  startX: number
   startY: number
+  x: number
   y: number
+  dx: number
   dy: number
   scale: number
   moved: boolean
@@ -67,11 +77,12 @@ const itemSelector = (scope: string, id?: string): string =>
   `[data-drag="${scope}"][data-drag-id${id === undefined ? '' : `="${CSS.escape(id)}"`}]`
 const groupSelector = (scope: string): string => `[data-drag="${scope}"][data-drop-group]`
 
-/** Top in viewport px from layout offsets (not transforms), so in-flight layout animations don't make targets flicker. The root must be positioned. */
-function layoutTop(el: HTMLElement, root: HTMLElement): number {
+/** Top (or left) in viewport px from layout offsets (not transforms), so in-flight layout animations don't make targets flicker. The root must be positioned. */
+function layoutTop(el: HTMLElement, root: HTMLElement, side: 'Top' | 'Left' = 'Top'): number {
   let y = 0
-  for (let n: HTMLElement | null = el; n && n !== root; n = n.offsetParent as HTMLElement | null) y += n.offsetTop
-  return root.getBoundingClientRect().top + y
+  for (let n: HTMLElement | null = el; n && n !== root; n = n.offsetParent as HTMLElement | null) y += n[`offset${side}`]
+  const box = root.getBoundingClientRect()
+  return (side === 'Top' ? box.top : box.left) + y
 }
 
 function scrollParent(el: HTMLElement): HTMLElement | null {
@@ -85,7 +96,7 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
 /** Group and row positions in viewport px at one scroll offset; kept while a drag runs. */
 interface Measure {
   scroll: number
-  groups: { key: string; top: number; bottom: number; mids: number[] }[]
+  groups: { key: string; top: number; bottom: number; left: number; right: number; mids: number[] }[]
 }
 
 const scrollPos = (scroller: HTMLElement | null): number => (scroller ? scroller.scrollTop : window.scrollY)
@@ -96,19 +107,23 @@ function measure(root: HTMLElement, scope: string, id: string, scroller: HTMLEle
     const key = group.dataset.dropGroup
     if (!key) return []
     const top = layoutTop(group, root)
+    const left = layoutTop(group, root, 'Left')
     const rows = [...group.querySelectorAll<HTMLElement>(itemSelector(scope))].filter((r) => r.dataset.dragId !== id)
-    return [{ key, top, bottom: top + group.offsetHeight, mids: rows.map((r) => layoutTop(r, root) + r.offsetHeight / 2) }]
+    const mids = rows.map((r) => layoutTop(r, root) + r.offsetHeight / 2)
+    return [{ key, top, bottom: top + group.offsetHeight, left, right: left + group.offsetWidth, mids }]
   })
   return { scroll: scrollPos(scroller), groups }
 }
 
-function hitTest(m: Measure, scroller: HTMLElement | null, y: number): DropSpot | null {
+/** The group nearest the copy's centre (x, y), and the index among its rows. */
+function hitTest(m: Measure, scroller: HTMLElement | null, x: number, y: number): DropSpot | null {
   // Scrolling since the measurement moved everything by the same amount.
   const shift = m.scroll - scrollPos(scroller)
   let best: Measure['groups'][number] | null = null
   let bestDistance = Infinity
   for (const group of m.groups) {
-    const distance = Math.max(0, group.top + shift - y, y - group.bottom - shift)
+    const dy = Math.max(0, group.top + shift - y, y - group.bottom - shift)
+    const distance = Math.hypot(dy, Math.max(0, group.left - x, x - group.right))
     if (distance < bestDistance) [best, bestDistance] = [group, distance]
   }
   return best ? { group: best.key, index: best.mids.filter((mid) => mid + shift < y).length } : null
@@ -125,12 +140,13 @@ function makeClone(item: HTMLElement, rect: DOMRect): HTMLElement {
   clone.inert = true
   clone.classList.add('drag-ghost')
   clone.style.cssText += `;position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;margin:0;opacity:1;transform:none;--c:${getComputedStyle(item).getPropertyValue('--c')}`
-  document.body.appendChild(clone)
+  // A modal <dialog> sits in the top layer; the copy has to live inside it to show above it.
+  ;(item.closest('dialog') ?? document.body).appendChild(clone)
   return clone
 }
 
-const paint = (s: Pick<Session, 'clone' | 'dy' | 'scale'>): void => {
-  s.clone.style.transform = `translate3d(0, ${s.dy}px, 0) scale(${s.scale})`
+const paint = (s: Pick<Session, 'clone' | 'dx' | 'dy' | 'scale'>): void => {
+  s.clone.style.transform = `translate3d(${s.dx}px, ${s.dy}px, 0) scale(${s.scale})`
 }
 
 /** Swallows the click that follows a drag, so dropping a row doesn't also open it. */
@@ -158,7 +174,12 @@ function swallowNextClick(): void {
  * it would land (neighbours glide via their `layout` animation), the scroller auto-scrolls near
  * its edges, and Escape puts it back. `onDrop` runs only when the spot changed.
  */
-export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | null>, onDrop: (drop: DropResult) => void) {
+export function useReorderDrag(
+  scope: string,
+  rootRef: RefObject<HTMLElement | null>,
+  onDrop: (drop: DropResult) => void,
+  { axis = 'y' }: ReorderOptions = {},
+) {
   const reduce = useReducedMotion()
   const [spot, setSpot] = useState<DragSpot | null>(null)
   const session = useRef<Session | null>(null)
@@ -177,15 +198,17 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     setSpot(null)
   }
 
-  const move = (clientY: number): void => {
+  const move = (clientX: number, clientY: number): void => {
     const s = session.current
     const root = rootRef.current
     if (!s || !root) return
+    s.x = clientX
     s.y = clientY
-    s.moved ||= Math.abs(clientY - s.startY) > SLOP_PX
+    s.moved ||= Math.hypot(clientX - s.startX, clientY - s.startY) > SLOP_PX
+    s.dx = axis === 'xy' ? clientX - s.startX : 0
     s.dy = clientY - s.grabY - s.startTop
     paint(s)
-    const next = hitTest(s.cache, s.scroller, clientY - s.grabY + s.height / 2)
+    const next = hitTest(s.cache, s.scroller, s.startLeft + s.dx + s.width / 2, clientY - s.grabY + s.height / 2)
     if (!next || (next.group === s.over.group && next.index === s.over.index)) return
     s.over = next
     setSpot({ ...next, id: s.id, height: s.height, fresh: false, settling: false })
@@ -194,7 +217,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
   const end = (commit: boolean): void => {
     const s = session.current
     if (!s) return
-    if (s.pending) move(s.y)
+    if (s.pending) move(s.x, s.y)
     session.current = null
     s.stop()
     // Only a drag that moved can be followed by a click on the row; Escape or a cancel must not eat a real tap.
@@ -205,7 +228,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     setSpot({ ...s.over, id: s.id, height: s.height, fresh: false, settling: true })
   }
 
-  const start = (pointerId: number, clientY: number, id: string, group: string): void => {
+  const start = (pointerId: number, clientX: number, clientY: number, id: string, group: string): void => {
     const root = rootRef.current
     if (!root || session.current) return
     finishSettle()
@@ -230,8 +253,13 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
       height: rect.height,
       grabY: clientY - rect.top,
       startTop: rect.top,
+      startLeft: rect.left,
+      width: rect.width,
+      startX: clientX,
       startY: clientY,
+      x: clientX,
       y: clientY,
+      dx: 0,
       dy: 0,
       scale: 1,
       moved: false,
@@ -244,6 +272,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     const onMove = (e: PointerEvent): void => {
       if (e.pointerId !== pointerId) return
       // One hit-test per frame, however fast the pointer reports.
+      s.x = e.clientX
       s.y = e.clientY
       s.pending = true
     }
@@ -267,7 +296,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     const tick = (): void => {
       if (s.pending) {
         s.pending = false
-        move(s.y)
+        move(s.x, s.y)
       }
       const box = s.scroller?.getBoundingClientRect()
       const top = Math.max(0, box?.top ?? 0)
@@ -277,7 +306,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
         // Faster the deeper into the edge band, eased so the start is gentle.
         const speed = Math.sign(push) * Math.min(1, Math.abs(push) / EDGE_PX) ** 2 * MAX_SCROLL_PX
         ;(s.scroller ?? document.scrollingElement ?? document.documentElement).scrollBy(0, speed)
-        move(s.y)
+        move(s.x, s.y)
       }
       s.raf = requestAnimationFrame(tick)
     }
@@ -324,11 +353,13 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     const { s } = current
     const home = [...root.querySelectorAll<HTMLElement>(itemSelector(scope, s.id))].find((r) => r.dataset.dragState === 'settling')
     const target = home ? layoutTop(home, root) - s.startTop : s.dy
-    const [fromDy, fromScale] = [s.dy, s.scale]
+    const targetX = home && axis === 'xy' ? layoutTop(home, root, 'Left') - s.startLeft : s.dx
+    const [fromDx, fromDy, fromScale] = [s.dx, s.dy, s.scale]
     s.clone.classList.add('is-settling')
     current.anim = animate(0, 1, {
       ...(latest.current.reduce || !home ? { duration: 0 } : SPRING),
       onUpdate: (p) => {
+        s.dx = fromDx + (targetX - fromDx) * p
         s.dy = fromDy + (target - fromDy) * p
         s.scale = fromScale + (1 - fromScale) * p
         paint(s)
@@ -336,7 +367,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
       onComplete: finishSettle,
     })
     // finishSettle only touches refs and state setters, so it can stay out of the deps.
-  }, [settling, scope, rootRef])
+  }, [settling, scope, rootRef, axis])
 
   // A long-press drag must stop the page from scrolling; only a non-passive listener can.
   useEffect(() => {
@@ -364,14 +395,19 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     if (e.button !== 0 || session.current) return
     e.preventDefault()
     e.stopPropagation()
-    start(e.pointerId, e.clientY, id, group)
+    start(e.pointerId, e.clientX, e.clientY, id, group)
   }
 
-  /** Item pointer-down: on touch, holding still for a moment picks the item up. */
-  const onPressDown = (e: ReactPointerEvent, id: string, group: string): void => {
-    if (e.pointerType !== 'touch' || !e.isPrimary || session.current) return
+  /**
+   * Item pointer-down: on touch, holding still for a moment picks the item up. With `mouse`, a
+   * mouse press that then moves picks it up too (a plain click still clicks).
+   */
+  const onPressDown = (e: ReactPointerEvent, id: string, group: string, mouse = false): void => {
+    if (!e.isPrimary || session.current) return
+    const touch = e.pointerType === 'touch'
+    if (!touch && (!mouse || e.button !== 0)) return
     const { pointerId, clientX: x0, clientY: y0 } = e
-    let y = y0
+    let [x, y] = [x0, y0]
     const off = (): void => {
       window.clearTimeout(timer)
       window.removeEventListener('pointermove', onMove)
@@ -380,17 +416,24 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     }
     const onMove = (ev: PointerEvent): void => {
       if (ev.pointerId !== pointerId) return
-      y = ev.clientY
-      if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > SLOP_PX) off()
+      ;[x, y] = [ev.clientX, ev.clientY]
+      if (Math.hypot(x - x0, y - y0) <= SLOP_PX) return
+      off()
+      if (touch) return
+      // Lift from where the press began, then catch up, so the copy stays under the grab point.
+      start(pointerId, x0, y0, id, group)
+      if (session.current) Object.assign(session.current, { x, y, pending: true })
     }
     const onEnd = (ev: PointerEvent): void => {
       if (ev.pointerId === pointerId) off()
     }
-    const timer = window.setTimeout(() => {
-      off()
-      navigator.vibrate?.(10)
-      start(pointerId, y, id, group)
-    }, LONG_PRESS_MS)
+    const timer = touch
+      ? window.setTimeout(() => {
+          off()
+          navigator.vibrate?.(10)
+          start(pointerId, x, y, id, group)
+        }, LONG_PRESS_MS)
+      : 0
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onEnd)
     window.addEventListener('pointercancel', onEnd)

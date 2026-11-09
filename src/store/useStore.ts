@@ -121,6 +121,8 @@ interface Actions {
   deleteArea: (id: string, moveTasksTo: string) => void
   /** Moves an area up (-1) or down (+1) in the sidebar order. */
   moveArea: (id: string, delta: -1 | 1) => void
+  /** Puts an area at `toIndex` (clamped) in the sidebar order, as one undoable change. */
+  reorderArea: (id: string, toIndex: number) => void
   clearEverything: () => void
   /** Removes everything from this device (sign-out on a shared computer). No undo, no tombstones. */
   wipeLocal: () => void
@@ -400,16 +402,22 @@ export const useStore = create<StoreState>()(
             areas: s.areas.map((a) => (a.id === id ? { ...a, ...patch, updatedAt: Date.now() } : a)),
           })),
 
-        moveArea: (id, delta) =>
-          set((s) => {
-            const from = s.areas.findIndex((a) => a.id === id)
-            const to = from + delta
-            if (from < 0 || to < 0 || to >= s.areas.length) return s
-            const areas = [...s.areas]
-            const [moved] = areas.splice(from, 1)
-            if (moved) areas.splice(to, 0, { ...moved, updatedAt: Date.now() })
-            return { ...invalidateUndo(), areas }
-          }),
+        moveArea: (id, delta) => {
+          const from = get().areas.findIndex((a) => a.id === id)
+          const to = from + delta
+          if (from >= 0 && to >= 0 && to < get().areas.length) get().reorderArea(id, to)
+        },
+
+        reorderArea: (id, toIndex) => {
+          const { areas } = get()
+          const from = areas.findIndex((a) => a.id === id)
+          const area = areas[from]
+          const to = Math.max(0, Math.min(toIndex, areas.length - 1))
+          if (!area || from === to) return
+          withUndo(`Moved ‘${area.name}’`, () =>
+            set({ areas: applyMove(areas, from, to).map((a) => (a.id === id ? { ...a, updatedAt: Date.now() } : a)) }),
+          )
+        },
 
         deleteArea: (id, moveTasksTo) => {
           const { areas } = get()
