@@ -3,6 +3,10 @@ import { expectPersisted, sideButton, startEmpty } from './helpers'
 
 test.describe('appearance', () => {
   test('a theme card applies the theme, arrow keys move between cards, and it survives a reload', async ({ page }) => {
+    const blocked: string[] = []
+    page.on('console', (m) => {
+      if (m.type() === 'error' && m.text().includes('Content Security Policy')) blocked.push(m.text())
+    })
     await startEmpty(page)
     const html = page.locator('html')
     await expect(html).toHaveAttribute('data-theme', /^(stone|night)$/)
@@ -27,5 +31,7 @@ test.describe('appearance', () => {
     await page.reload()
     await expect(html).toHaveAttribute('data-theme', 'moss')
     await expect(html).toHaveAttribute('data-text-size', 'larger')
+    // The pre-paint theme script must not be blocked by the CSP hash.
+    expect(blocked).toEqual([])
   })
 })

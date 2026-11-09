@@ -41,7 +41,9 @@ function contentSecurityPolicy(): Plugin {
     name: 'cairn-csp',
     apply: 'build',
     async transformIndexHtml(html) {
-      const inline = html.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? ''
+      // Browsers hash the script after turning CRLF into LF (HTML input normalisation), so hash that text;
+      // a Windows checkout would otherwise ship a hash that never matches.
+      const inline = (html.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? '').replace(/\r\n?/g, '\n')
       const { createHash } = await import('node:crypto')
       const hash = createHash('sha256').update(inline).digest('base64')
       const meta = `<meta http-equiv="Content-Security-Policy" content="${CSP.replace('THEME_HASH', hash)}" />`
