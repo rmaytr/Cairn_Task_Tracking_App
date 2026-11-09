@@ -1,0 +1,92 @@
+/* ---------- End of a block ---------- */
+.room-end {
+  display: grid;
+  gap: 18px;
+}
+
+.room-end__title {
+  max-width: 24ch;
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
+  line-height: 1.08;
+  outline: none;
+}
+
+.room-end__compare {
+  color: var(--ink-2);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+.room-rate {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.room-rate__opts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.room-rate__opt {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 560;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.room-rate__opt span {
+  color: var(--ink);
+  font-size: var(--step-2);
+}
+
+.room-rate__opt:hover {
+  border-color: var(--line-strong);
+}
+
+.room-rate__opt:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+}
+
+.room-rate__opt:has(input:focus-visible) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.room-end__extras {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.room-end__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .room-end__extras {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .room-rate__opts {
+    gap: 4px;
+  }
+}

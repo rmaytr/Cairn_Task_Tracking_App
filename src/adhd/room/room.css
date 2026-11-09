@@ -1,0 +1,330 @@
+/* ---------- The task ---------- */
+.room-task {
+  display: grid;
+  gap: 8px;
+}
+
+.room-task__title {
+  margin: 0;
+  font-size: var(--step-2);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.room-task__why,
+.room-task__label {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.room-task__label {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.room-task__step {
+  font-size: clamp(1.75rem, 3.6vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.room-task__steps {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-task__steps label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.room-task__steps label.is-next {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 560;
+}
+
+.room-task__steps input:checked + span {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.room-task__add,
+.room-park__form {
+  display: flex;
+  gap: 8px;
+}
+
+.room-task__add .field,
+.room-park__form .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-pick {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 560;
+}
+
+/* ---------- Guess ---------- */
+.room-guess {
+  display: grid;
+  gap: 12px;
+}
+
+.room-guess__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-guess__chips .chip {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: var(--step-0);
+}
+
+.room-guess__custom .field {
+  width: 7.5rem;
+}
+
+.room-guess__hint {
+  padding: 10px 14px;
+  border-radius: var(--radius-s);
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+  font-size: var(--step--1);
+  font-weight: 560;
+}
+
+.room-guess__ghost {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.room-guess__go {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-guess__skip {
+  justify-self: start;
+}
+
+/* ---------- Timer ---------- */
+.room-panel--timer {
+  justify-items: center;
+  text-align: center;
+}
+
+.room-timer {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.room-timer__disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(240px, 70vw);
+  aspect-ratio: 1;
+}
+
+.room-timer__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.room-timer__track,
+.room-timer__arc {
+  fill: none;
+  stroke-width: 8;
+}
+
+.room-timer__track {
+  stroke: var(--sunken);
+}
+
+.room-timer__arc {
+  stroke: var(--primary);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* Ghost pace: where the arc's end was when you finished last time. Faint, never a target to beat. */
+.room-timer__ghost {
+  fill: var(--panel);
+  stroke: var(--ink-3);
+  stroke-width: 2;
+}
+
+.room-timer__read {
+  position: relative;
+  display: grid;
+  gap: 4px;
+}
+
+.room-timer__time {
+  color: var(--ink);
+  font-size: clamp(2.75rem, 7vw, 3.5rem);
+  line-height: 1;
+}
+
+.room-timer__until {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.room-timer__ghost-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.room-timer__ghost-dot {
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--ink-3);
+  border-radius: 50%;
+}
+
+.room-timer__notice {
+  padding: 8px 14px;
+  border-radius: var(--radius-s);
+  background: var(--sun-soft);
+  color: var(--sun-ink);
+  font-size: var(--step--1);
+  font-weight: 560;
+}
+
+.room-timer__btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.room-ramp {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  text-align: left;
+}
+
+.room-ramp__text {
+  font-weight: 560;
+  line-height: 1.4;
+}
+
+.room-ramp__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Companion ---------- */
+.room-buddy {
+  display: grid;
+  gap: 8px;
+}
+
+.room-buddy__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-buddy__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.room-buddy__note {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.room-buddy__body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.room-buddy__cairn {
+  flex: none;
+  width: 72px;
+  height: 65px;
+}
+
+.room-buddy__ground {
+  fill: var(--sunken);
+}
+
+.room-buddy__stone {
+  fill: color-mix(in srgb, var(--primary) 70%, var(--surface));
+}
+
+.room-buddy__stone--top {
+  fill: var(--sun);
+}
+
+.room-buddy__line {
+  color: var(--ink-2);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ---------- Park it ---------- */
+.room-park {
+  display: grid;
+  gap: 10px;
+}
+
+.room-park__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-park__list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.room-park__list svg {
+  flex: none;
+  color: var(--primary);
+}
