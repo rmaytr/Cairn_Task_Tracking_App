@@ -12,6 +12,7 @@ beforeEach(() => {
     undoSnapshot: null,
     toast: null,
     selectedId: null,
+    focusTimer: null,
   })
 })
 
@@ -290,5 +291,50 @@ describe('list sort prefs', () => {
     const base = { id: 't', title: 'T', areaId: 'classes', createdAt: 1, updatedAt: 1 }
     const { tasks } = sanitizePersisted({ tasks: [{ ...base, rank: 2.5 }, { ...base, id: 'u', rank: 'x' }] })
     expect(tasks.map((t) => t.rank)).toEqual([2.5, undefined])
+  })
+})
+
+describe('focus timer', () => {
+  const MIN = 60_000
+  const spent = (id: string) => state().tasks.find((t) => t.id === id)?.spentMinutes
+
+  it('ending credits the worked minutes to its task once', () => {
+    const id = state().addTask({ title: 'Read' }, 'classes')
+    state().startFocusTimer(id, 25, 0)
+    state().endFocusTimer(10 * MIN)
+    expect(spent(id)).toBe(10)
+    expect(state().focusTimer).toBeNull()
+    state().endFocusTimer(20 * MIN)
+    expect(spent(id)).toBe(10)
+  })
+
+  it('starting a timer on another task credits the old one first', () => {
+    const a = state().addTask({ title: 'A' }, 'classes')
+    const b = state().addTask({ title: 'B' }, 'classes')
+    state().startFocusTimer(a, 15, 0)
+    state().startFocusTimer(b, 5, 6 * MIN)
+    expect(spent(a)).toBe(6)
+    expect(state().focusTimer?.taskId).toBe(b)
+  })
+
+  it('completing the task credits and clears it, and Undo still works', () => {
+    const id = state().addTask({ title: 'Essay' }, 'classes')
+    state().startFocusTimer(id, 25, Date.now() - 5 * MIN)
+    state().setDone(id, true)
+    expect(state().focusTimer).toBeNull()
+    expect(spent(id)).toBe(5)
+    expect(state().toast?.undoable).toBe(true)
+    state().undo()
+    expect(state().tasks[0]).toMatchObject({ done: false, spentMinutes: 5 })
+  })
+
+  it('updates the running timer and is never persisted', () => {
+    const id = state().addTask({ title: 'Read' }, 'classes')
+    state().startFocusTimer(id, 25, 0)
+    const paused = { durationMs: 25 * MIN, endsAt: null, pausedRemainingMs: 20 * MIN }
+    state().updateFocusTimer(paused)
+    expect(state().focusTimer).toEqual({ taskId: id, timer: paused })
+    const persisted = useStore.persist.getOptions().partialize?.(state())
+    expect(persisted).not.toHaveProperty('focusTimer')
   })
 })

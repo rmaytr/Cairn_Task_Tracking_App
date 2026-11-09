@@ -5,7 +5,6 @@ import { assistantError, getTransport } from '../assist/assistant'
 import { areaStyle, useAreaMap, useNow, useReducedMotion } from '../hooks'
 import { nextStep } from '../model/derive'
 import type { Task } from '../model/types'
-import { workedMinutes, type FocusTimer as Timer } from '../model/timer'
 import { filterByEffort, localPlan, mergeAssistantPlan, pinnedPlan, type EffortFilter, type LockInPlan } from '../plan/lockin'
 import { useStore } from '../store/useStore'
 import { DuePill } from './DueDate'
@@ -34,21 +33,15 @@ export function LockInView() {
   const showToast = useStore((s) => s.showToast)
   const navigate = useStore((s) => s.navigate)
   const now = useNow()
-  const [phase, setPhase] = useState<Phase>(() =>
-    focusTaskId ? { kind: 'go', plan: pinnedPlan(focusTaskId, useStore.getState().tasks, new Date()), index: 0 } : { kind: 'start' },
-  )
+  const endFocusTimer = useStore((s) => s.endFocusTimer)
+  // Coming back while a timer runs picks up its task again.
+  const [phase, setPhase] = useState<Phase>(() => {
+    const { tasks: all, focusTimer } = useStore.getState()
+    const pin = focusTaskId ?? focusTimer?.taskId
+    return pin ? { kind: 'go', plan: pinnedPlan(pin, all, new Date()), index: 0 } : { kind: 'start' }
+  })
   const [stones, setStones] = useState(0)
   const [filter, setFilter] = useState<EffortFilter>('any')
-  const [timer, setTimer] = useState<{ taskId: string; timer: Timer } | null>(null)
-  const updateTask = useStore((s) => s.updateTask)
-  /** Stops the timer and adds the minutes worked to the task. */
-  const endTimer = (): void => {
-    if (!timer) return
-    const minutes = workedMinutes(timer.timer, Date.now())
-    const task = useStore.getState().tasks.find((t) => t.id === timer.taskId)
-    if (task && minutes > 0) updateTask(task.id, { spentMinutes: task.spentMinutes + minutes })
-    setTimer(null)
-  }
   const open = useMemo(() => tasks.filter((t) => !t.done), [tasks])
   const fit = useMemo(() => filterByEffort(tasks, filter), [tasks, filter])
 
@@ -61,6 +54,21 @@ export function LockInView() {
   useEffect(() => {
     if (focusTaskId) useStore.setState({ focusTaskId: null })
   }, [focusTaskId])
+
+  const queue =
+    phase.kind === 'go'
+      ? phase.plan.ids
+          .slice(phase.index)
+          .map((id) => tasks.find((t) => t.id === id))
+          .filter((t): t is Task => t !== undefined && !t.done)
+      : []
+  const current = queue[0]
+  const currentId = current?.id
+  // The timer belongs to one task: when another task becomes current, it ends (and credits) first.
+  useEffect(() => {
+    const running = useStore.getState().focusTimer
+    if (currentId && running && running.taskId !== currentId) endFocusTimer()
+  }, [currentId, endFocusTimer])
 
   const start = async (): Promise<void> => {
     setPhase({ kind: 'planning' })
@@ -131,11 +139,6 @@ export function LockInView() {
   }
 
   const { plan, index } = phase
-  const queue = plan.ids
-    .slice(index)
-    .map((id) => tasks.find((t) => t.id === id))
-    .filter((t): t is Task => t !== undefined && !t.done)
-  const current = queue[0]
   const advance = (): void => {
     const at = current ? plan.ids.indexOf(current.id, index) : index
     setPhase({ kind: 'go', plan, index: at + 1 })
@@ -170,7 +173,14 @@ export function LockInView() {
         <p className="lockin__count num" aria-live="polite">
           {stones === 0 ? 'Each thing you finish adds a stone' : `${stones} done`}
         </p>
-        <button type="button" className="btn btn--ghost btn--sm" onClick={() => navigate({ view: 'home', area: null })}>
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          onClick={() => {
+            endFocusTimer()
+            navigate({ view: 'home', area: null })
+          }}
+        >
           End
         </button>
       </div>
@@ -182,9 +192,7 @@ export function LockInView() {
           reason={plan.reasons[current.id] ?? null}
           summary={index === 0 ? plan.summary : null}
           fromAssistant={plan.source === 'assistant'}
-          timer={timer?.taskId === current.id ? timer.timer : null}
-          onTimer={(t) => setTimer({ taskId: current.id, timer: t })}
-          onEndTimer={endTimer}
+          onEndTimer={endFocusTimer}
           onFinished={() => setStones((n) => n + 1)}
           onTaskDone={advance}
           onSkip={advance}
@@ -205,8 +213,6 @@ interface NowCardProps {
   reason: string | null
   summary: string | null
   fromAssistant: boolean
-  timer: Timer | null
-  onTimer: (timer: Timer) => void
   onEndTimer: () => void
   onFinished: () => void
   onTaskDone: () => void
@@ -214,7 +220,7 @@ interface NowCardProps {
 }
 
 /** The one thing: the next step big, the task it belongs to small, and why it's first. */
-function NowCard({ task, now, reason, summary, fromAssistant, timer, onTimer, onEndTimer, onFinished, onTaskDone, onSkip }: NowCardProps) {
+function NowCard({ task, now, reason, summary, fromAssistant, onEndTimer, onFinished, onTaskDone, onSkip }: NowCardProps) {
   const area = useAreaMap().get(task.areaId)
   const updateStep = useStore((s) => s.updateStep)
   const addStep = useStore((s) => s.addStep)
@@ -237,8 +243,7 @@ function NowCard({ task, now, reason, summary, fromAssistant, timer, onTimer, on
       return
     }
     if (step) updateStep(task.id, step.id, { done: true })
-    onEndTimer() // before setDone, so Undo of the finish stays valid
-    setDone(task.id, true)
+    setDone(task.id, true) // also ends the timer and credits its minutes
     onTaskDone()
   }
 
@@ -323,7 +328,7 @@ function NowCard({ task, now, reason, summary, fromAssistant, timer, onTimer, on
         </form>
       )}
 
-      <FocusTimer timer={timer} onChange={onTimer} onEnd={onEndTimer} />
+      <FocusTimer taskId={task.id} />
 
       <div className="now__actions">
         <button type="button" className="btn btn--primary btn--lg now__done" onClick={finish}>

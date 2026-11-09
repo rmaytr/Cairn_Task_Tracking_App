@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { proxyAvailable, resetTransport, saveInvite } from './assist/assistant'
 import { initCloud } from './cloud/controller'
 import { useMediaQuery } from './hooks'
-import { tock } from './lib/feedback'
+import { chime, tock } from './lib/feedback'
 import { THEMES, resolveTheme } from './model/themes'
 import { onStorageError } from './store/persist'
 import { parseHash } from './route'
@@ -49,6 +49,34 @@ export function useFinishFeedback(): void {
     () =>
       useStore.subscribe((s, prev) => {
         if (s.lastCompleted && s.lastCompleted !== prev.lastCompleted) tock(s.prefs.feedback)
+      }),
+    [],
+  )
+}
+
+/** Fires a timer's end at most this long after it is due. */
+const ALARM_SLACK_MS = 50
+
+/**
+ * The Lock-in timer, app-wide: chimes at its end on any view (a one-shot timeout, which hidden
+ * tabs throttle far less than the view's 1s repaint), and credits and clears it once its task
+ * is done or gone (completed from sync, deleted, cleared).
+ */
+export function useFocusTimer(): void {
+  const endsAt = useStore((s) => s.focusTimer?.timer.endsAt ?? null)
+  useEffect(() => {
+    if (endsAt === null) return
+    const id = setTimeout(() => {
+      if (useStore.getState().prefs.feedback.sound) chime()
+    }, Math.max(0, endsAt - Date.now()) + ALARM_SLACK_MS)
+    return () => clearTimeout(id)
+  }, [endsAt])
+
+  useEffect(
+    () =>
+      useStore.subscribe((s) => {
+        const running = s.focusTimer
+        if (running && !s.tasks.some((t) => t.id === running.taskId && !t.done)) s.endFocusTimer()
       }),
     [],
   )

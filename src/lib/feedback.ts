@@ -6,13 +6,29 @@ export interface FeedbackPrefs {
 
 let ctx: AudioContext | null = null
 
+/** The shared context, created and resumed on demand; null where audio is unavailable. Throws if blocked. */
+function audio(): AudioContext | null {
+  const Ctor = typeof AudioContext === 'undefined' ? undefined : AudioContext
+  if (!Ctor) return null
+  ctx ??= new Ctor()
+  if (ctx.state === 'suspended') void ctx.resume()
+  return ctx
+}
+
+/** Call from a tap: iOS only lets audio start from a user gesture, so a later chime can play. */
+export function warmAudio(): void {
+  try {
+    audio()
+  } catch {
+    // Silence is fine.
+  }
+}
+
 /** One soft sine blip with a fast decay; `at` offsets it in seconds. */
 function blip(frequency: number, at: number, length: number, gain: number): void {
   try {
-    const Ctor = typeof AudioContext === 'undefined' ? undefined : AudioContext
-    if (!Ctor) return
-    ctx ??= new Ctor()
-    if (ctx.state === 'suspended') void ctx.resume()
+    const ctx = audio()
+    if (!ctx) return
     const t = ctx.currentTime + at
     const osc = ctx.createOscillator()
     const amp = ctx.createGain()

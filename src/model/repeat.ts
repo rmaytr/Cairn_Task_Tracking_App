@@ -62,6 +62,7 @@ export function nextOccurrence(task: Task, now: Date, newId: () => string): Task
     createdAt: time,
     updatedAt: time,
     spentMinutes: 0,
+    snoozes: undefined,
     repeatOf: task.id,
     ...(repeat === 'monthly' && { repeatAnchor: anchor }),
   }

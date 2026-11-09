@@ -6,6 +6,7 @@ import { applyMove, rerank } from '../lib/reorder'
 import { DEFAULT_AREAS, MAX_AREAS } from '../model/defaults'
 import { nextOccurrence } from '../model/repeat'
 import { snooze } from '../model/snooze'
+import { start as startTimer, workedMinutes, type FocusTimer } from '../model/timer'
 import { AREA_COLORS, type Area, type AreaColor, type Horizon, type Task, type TaskDraft, type Tombstone } from '../model/types'
 import { parseHash, routeToHash, type Route, type TasksMode, type View } from '../route'
 import { wouldCreateCycle } from '../plan/order'
@@ -89,6 +90,8 @@ interface UiState {
   shortcutsOpen: boolean
   /** Task pinned in Focus; null means "whatever is nearest". */
   focusTaskId: string | null
+  /** The one running Lock-in timer; lives here (never persisted) so it survives leaving the view. */
+  focusTimer: { taskId: string; timer: FocusTimer } | null
   sync: SyncInfo
 }
 
@@ -146,6 +149,11 @@ interface Actions {
   /** Sets the due date (and keeps the task in a matching horizon) with an Undo toast. */
   rescheduleTask: (id: string, due: string) => void
   startFocus: (id: string | null) => void
+  /** Starts a timer on a task, ending (and crediting) any other one first. */
+  startFocusTimer: (taskId: string, minutes: number, now?: number) => void
+  updateFocusTimer: (timer: FocusTimer) => void
+  /** Stops the timer and adds the minutes worked to its task's spentMinutes, once. */
+  endFocusTimer: (now?: number) => void
 }
 
 export type StoreState = PersistedState & UiState & Actions
@@ -235,6 +243,7 @@ export const useStore = create<StoreState>()(
         quickFindOpen: false,
         shortcutsOpen: false,
         focusTaskId: null,
+        focusTimer: null,
         sync: { status: 'off', email: null, lastSyncedAt: null, message: null, vault: 'unknown' },
 
         addTask: (draft, areaId, fallback = 'week') => {
@@ -308,6 +317,8 @@ export const useStore = create<StoreState>()(
         setDone: (id, done) => {
           const task = get().tasks.find((t) => t.id === id)
           if (!task || task.done === done) return
+          // Credit a running timer before the snapshot, so Undo keeps the minutes and stays valid.
+          if (done && get().focusTimer?.taskId === id) get().endFocusTimer()
           const now = new Date()
           // A repeating task makes one next copy; re-checking it never makes a second.
           const hasCopy = get().tasks.some((t) => t.repeatOf === id && !t.done)
@@ -434,6 +445,7 @@ export const useStore = create<StoreState>()(
             tombstones: [],
             selectedId: null,
             focusTaskId: null,
+            focusTimer: null,
             undoSnapshot: null,
             toast: null,
             lastCompleted: null,
@@ -551,6 +563,19 @@ export const useStore = create<StoreState>()(
           withUndo(`Due ${formatDue(due, new Date())}`, () => mapTask(id, (t) => touch(t, { due, horizon })))
         },
         startFocus: (id) => set({ focusTaskId: id, view: 'focus', selectedId: null }),
+        startFocusTimer: (taskId, minutes, now = Date.now()) => {
+          get().endFocusTimer(now)
+          set({ focusTimer: { taskId, timer: startTimer(now, minutes) } })
+        },
+        updateFocusTimer: (timer) => set((s) => (s.focusTimer ? { focusTimer: { ...s.focusTimer, timer } } : s)),
+        endFocusTimer: (now = Date.now()) => {
+          const running = get().focusTimer
+          if (!running) return
+          set({ focusTimer: null })
+          const minutes = workedMinutes(running.timer, now)
+          const task = get().tasks.find((t) => t.id === running.taskId)
+          if (task && minutes > 0) get().updateTask(task.id, { spentMinutes: task.spentMinutes + minutes })
+        },
       }
     },
     {

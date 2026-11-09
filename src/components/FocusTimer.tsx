@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useReducedMotion } from '../hooks'
-import { chime } from '../lib/feedback'
-import { extend, finishTime, isFinished, isPaused, pause, remainingMs, resume, start, type FocusTimer as Timer } from '../model/timer'
+import { warmAudio } from '../lib/feedback'
+import { extend, finishTime, isFinished, isPaused, pause, remainingMs, resume, type FocusTimer as Timer } from '../model/timer'
 import { useStore } from '../store/useStore'
 import { Icon } from './Icon'
 import './FocusTimer.css'
@@ -10,6 +10,7 @@ const CHOICES = [5, 15, 25] as const
 const EXTRA_MINUTES = 5
 const RADIUS = 52
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+const LAST_MINUTE_MS = 60_000
 
 const clock = (ms: number): string => {
   const total = Math.ceil(ms / 1000)
@@ -17,17 +18,27 @@ const clock = (ms: number): string => {
 }
 
 interface FocusTimerProps {
-  timer: Timer | null
-  onChange: (timer: Timer) => void
-  /** Stops the timer and adds the minutes worked to the task. */
-  onEnd: () => void
+  taskId: string
 }
 
-/** A calm timer beside the current step: pick 5 / 15 / 25 minutes, watch the ring, pause or stop. */
-export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
+/**
+ * A calm timer beside the current step: pick 5 / 15 / 25 minutes, watch the ring, pause or stop.
+ * The timer itself lives in the store; the end chime is scheduled app-wide (useFocusTimer).
+ */
+export function FocusTimer({ taskId }: FocusTimerProps) {
   const sound = useStore((s) => s.prefs.feedback.sound)
+  const timer = useStore((s) => (s.focusTimer?.taskId === taskId ? s.focusTimer.timer : null))
+  const startFocusTimer = useStore((s) => s.startFocusTimer)
+  const updateFocusTimer = useStore((s) => s.updateFocusTimer)
+  const endFocusTimer = useStore((s) => s.endFocusTimer)
   const reduce = useReducedMotion()
   const [now, setNow] = useState(() => Date.now())
+  /** Moves `now` along with the change, so the first frame isn't drawn against a stale clock. */
+  const change = (next: (at: number) => Timer): void => {
+    const at = Date.now()
+    setNow(at)
+    updateFocusTimer(next(at))
+  }
   const running = timer !== null && !isPaused(timer) && !isFinished(timer, now)
   const finished = timer !== null && isFinished(timer, now)
 
@@ -44,10 +55,6 @@ export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
     }
   }, [running])
 
-  useEffect(() => {
-    if (finished && sound) chime()
-  }, [finished, sound])
-
   if (!timer) {
     return (
       <div className="ftimer ftimer--idle" role="group" aria-label="Focus timer">
@@ -55,7 +62,17 @@ export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
           <Icon name="hourglass" size={16} /> Focus for
         </span>
         {CHOICES.map((m) => (
-          <button key={m} type="button" className="btn btn--sm" onClick={() => onChange(start(Date.now(), m))}>
+          <button
+            key={m}
+            type="button"
+            className="btn btn--sm"
+            onClick={() => {
+              if (sound) warmAudio()
+              const at = Date.now()
+              setNow(at)
+              startFocusTimer(taskId, m, at)
+            }}
+          >
             {m} min
           </button>
         ))}
@@ -67,10 +84,10 @@ export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
     return (
       <div className="ftimer ftimer--done" role="status">
         <p className="ftimer__msg">Time. Keep going or call it?</p>
-        <button type="button" className="btn btn--sm" onClick={() => onChange(extend(timer, Date.now(), EXTRA_MINUTES))}>
+        <button type="button" className="btn btn--sm" onClick={() => change((at) => extend(timer, at, EXTRA_MINUTES))}>
           <Icon name="plus" size={14} /> {EXTRA_MINUTES} min
         </button>
-        <button type="button" className="btn btn--sm btn--primary" onClick={onEnd}>
+        <button type="button" className="btn btn--sm btn--primary" onClick={() => endFocusTimer()}>
           Done
         </button>
       </div>
@@ -97,8 +114,12 @@ export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
         />
       </svg>
       <div className="ftimer__read">
-        <span className="ftimer__time num" role="timer" aria-label={`${clock(left)} left`}>
+        <span className="ftimer__time num" role="timer">
           {clock(left)}
+          <span className="visually-hidden"> left</span>
+        </span>
+        <span className="visually-hidden" aria-live="polite">
+          {!paused && left <= LAST_MINUTE_MS ? 'One minute left' : ''}
         </span>
         <span className="ftimer__until">{paused ? 'Paused' : `until ${until}`}</span>
       </div>
@@ -106,13 +127,13 @@ export function FocusTimer({ timer, onChange, onEnd }: FocusTimerProps) {
         <button
           type="button"
           className="icon-btn"
-          onClick={() => onChange(paused ? resume(timer, Date.now()) : pause(timer, Date.now()))}
+          onClick={() => change((at) => (paused ? resume(timer, at) : pause(timer, at)))}
           aria-label={paused ? 'Resume timer' : 'Pause timer'}
           title={paused ? 'Resume' : 'Pause'}
         >
           <Icon name={paused ? 'play' : 'pause'} size={18} />
         </button>
-        <button type="button" className="icon-btn" onClick={onEnd} aria-label="Stop timer" title="Stop">
+        <button type="button" className="icon-btn" onClick={() => endFocusTimer()} aria-label="Stop timer" title="Stop">
           <Icon name="close" size={18} />
         </button>
       </div>

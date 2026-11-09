@@ -60,6 +60,11 @@ describe('nextOccurrence', () => {
     expect(next?.id).not.toBe('orig')
   })
 
+  it('starts the next copy with no snoozes', () => {
+    const next = nextOccurrence(task({ repeat: 'daily', snoozes: 3 }), NOW, id)
+    expect(next?.snoozes).toBeUndefined()
+  })
+
   it('returns null for tasks that do not repeat', () => {
     expect(nextOccurrence(task({}), NOW, id)).toBeNull()
   })
