@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { formatDue } from '../lib/dates'
+import { formatDue, horizonForDue, nearerHorizon } from '../lib/dates'
 import { newId } from '../lib/ids'
 import { DEFAULT_AREAS, MAX_AREAS } from '../model/defaults'
 import { nextOccurrence } from '../model/repeat'
@@ -85,6 +85,7 @@ interface UiState {
   newAreaOpen: boolean
   accountOpen: boolean
   quickFindOpen: boolean
+  shortcutsOpen: boolean
   /** Task pinned in Focus; null means "whatever is nearest". */
   focusTaskId: string | null
   sync: SyncInfo
@@ -131,6 +132,9 @@ interface Actions {
   setNewAreaOpen: (open: boolean) => void
   setAccountOpen: (open: boolean) => void
   setQuickFindOpen: (open: boolean) => void
+  setShortcutsOpen: (open: boolean) => void
+  /** Sets the due date (and keeps the task in a matching horizon) with an Undo toast. */
+  rescheduleTask: (id: string, due: string) => void
   startFocus: (id: string | null) => void
 }
 
@@ -219,6 +223,7 @@ export const useStore = create<StoreState>()(
         newAreaOpen: false,
         accountOpen: false,
         quickFindOpen: false,
+        shortcutsOpen: false,
         focusTaskId: null,
         sync: { status: 'off', email: null, lastSyncedAt: null, message: null, vault: 'unknown' },
 
@@ -493,6 +498,13 @@ export const useStore = create<StoreState>()(
         setNewAreaOpen: (open) => set({ newAreaOpen: open }),
         setAccountOpen: (open) => set({ accountOpen: open }),
         setQuickFindOpen: (open) => set({ quickFindOpen: open }),
+        setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
+        rescheduleTask: (id, due) => {
+          const task = get().tasks.find((t) => t.id === id)
+          if (!task || task.done || task.due === due) return
+          const horizon = nearerHorizon(task.horizon, horizonForDue(due, new Date()))
+          withUndo(`Due ${formatDue(due, new Date())}`, () => mapTask(id, (t) => touch(t, { due, horizon })))
+        },
         startFocus: (id) => set({ focusTaskId: id, view: 'focus', selectedId: null }),
       }
     },

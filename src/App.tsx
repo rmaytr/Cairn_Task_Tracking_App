@@ -9,6 +9,7 @@ import { NewAreaDialog } from './components/NewAreaDialog'
 import { Onboarding } from './components/Onboarding'
 import { QuickAddDialog } from './components/QuickAddDialog'
 import { QuickFind } from './components/QuickFind'
+import { ShortcutsSheet } from './components/ShortcutsSheet'
 import { ResetView } from './components/ResetView'
 import { SettingsDialog } from './components/SettingsDialog'
 import { TaskDetail } from './components/TaskDetail'
@@ -63,6 +64,7 @@ export default function App() {
       <NewAreaDialog />
       <AccountDialog />
       <QuickFind />
+      <ShortcutsSheet />
       <Onboarding />
       <Toast />
     </div>
