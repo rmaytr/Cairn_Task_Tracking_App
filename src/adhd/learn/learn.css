@@ -1,0 +1,355 @@
+/* ---------- A research card ---------- */
+.fact {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 20px 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.fact__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fact__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--step-1);
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.fact__body {
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fact__source {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.fact__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 4px;
+}
+
+.fact--compact {
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.fact--compact .fact__title {
+  font-size: var(--step-0);
+}
+
+.fact--compact .fact__foot {
+  margin-top: 0;
+}
+
+/* Evidence: words first, three small dots as a second cue. */
+.evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--ink-2);
+  font-size: var(--step--2);
+  font-weight: 500;
+}
+
+.evidence--strong {
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+}
+
+.evidence__dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.evidence__dots i {
+  width: 5px;
+  height: 5px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.evidence__dots i.is-on {
+  background: currentColor;
+}
+
+/* Helps me / Want to try / Not for me */
+.marks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--sunken);
+}
+
+.marks__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.18s var(--ease-spring);
+}
+
+.marks__btn svg {
+  opacity: 0.55;
+}
+
+.marks__btn:hover {
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--ink);
+}
+
+.marks__btn:active {
+  transform: scale(0.95);
+  transition-duration: 0.06s;
+}
+
+.marks__btn[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.marks__btn[aria-pressed='true'] svg {
+  opacity: 1;
+}
+
+.marks__btn--helps[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+@media (pointer: coarse) {
+  .marks__btn {
+    min-height: 40px;
+  }
+}
+
+/* Phones: the three marks share one full-width row; the words carry it, so the icons go. */
+@media (max-width: 480px) {
+  .marks {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .marks__btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 8px;
+  }
+
+  .marks__btn svg {
+    display: none;
+  }
+}
+
+/* ---------- Your patterns ---------- */
+.patterns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.pattern {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.pattern:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.pattern dt {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.pattern dd {
+  margin: 0;
+}
+
+.pattern__value {
+  color: var(--ink);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.pattern__value.is-quiet {
+  color: var(--ink-3);
+}
+
+.pattern__sub {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  text-wrap: pretty;
+}
+
+@media (max-width: 420px) {
+  .patterns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- What works ---------- */
+.learn {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+}
+
+.learn__lede {
+  max-width: 60ch;
+  color: var(--ink-2);
+  font-size: var(--step-1);
+}
+
+.learn h2 {
+  font-size: var(--step-1);
+}
+
+.learn__playbook {
+  display: grid;
+  gap: 14px;
+}
+
+.learn__hint {
+  color: var(--ink-2);
+}
+
+.learn__group {
+  display: grid;
+  gap: 8px;
+}
+
+.learn__group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.learn__group-title .num {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.learn__library {
+  display: grid;
+  gap: 14px;
+}
+
+.learn__library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.learn__sure summary {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.learn__sure summary:hover {
+  color: var(--ink);
+}
+
+.learn__sure dl {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-m);
+  background: var(--panel);
+}
+
+.learn__sure dl > div {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.learn__sure dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.learn__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.learn__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learn__list > li {
+  display: grid;
+}
+
+.learn__list--compact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .learn__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fact {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .learn__sure dl > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
