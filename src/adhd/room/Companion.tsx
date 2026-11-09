@@ -32,7 +32,7 @@ export function Companion({ title, progress, paused }: CompanionProps) {
           <span>Keep me company</span>
         </label>
       </div>
-      <p className="room-buddy__note">An experiment: some people focus better with company.</p>
+      <p className="room-buddy__note">An experiment: some people say they focus better with company. There’s little research yet.</p>
       {on && (
         <div className="room-buddy__body">
           <motion.svg

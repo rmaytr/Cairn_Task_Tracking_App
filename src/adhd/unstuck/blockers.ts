@@ -32,10 +32,10 @@ export interface Why {
 export const WHY: Record<MoveId, Why> = {
   'tiny-step': { line: 'A first step this small is easy to begin, and starting is usually the hard part.', source: 'Small steps, as used in CBT for adult ADHD (Safren et al. 2010)' },
   'if-then': { line: 'Deciding when and where you will start helps people follow through more than a goal alone.', source: 'Gollwitzer & Sheeran 2006' },
-  'less-boring': { line: 'Adding something you like, a reward, or a change of scene can make dull work easier to begin.', source: 'Small rewards close to the effort help (Marx et al. 2021)' },
+  'less-boring': { line: 'Adding something you like, a reward, or a change of scene can make dull work easier to begin.', source: 'Waiting is harder with ADHD (Marx et al. 2021)' },
   'be-kind': { line: 'Being kind to yourself is linked with better wellbeing in adults with ADHD.', source: 'Beaton et al. 2022' },
   'pick-one': { line: 'Fewer choices means less to carry. One thing is enough for now.', source: 'Cairn’s own rule: one thing at a time' },
-  'small-things': { line: 'A short burst of movement may help focus for a while. The effect is small but real.', source: 'Acute exercise meta-analysis, 2022' },
+  'small-things': { line: 'Exercise briefly helped focus in studies of children with ADHD. A short move is a cheap thing to try.', source: 'Chueh et al. 2022' },
 }
 
 export const WHEN_CHIPS = ['after breakfast', 'when I sit at my desk', 'at 4pm', 'right after class'] as const

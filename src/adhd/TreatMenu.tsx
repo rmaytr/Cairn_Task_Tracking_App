@@ -58,7 +58,7 @@ export function TreatMenu() {
   return (
     <div className="treats">
       <p className="stuck__lede">
-        Waiting for a reward can feel especially hard with ADHD. Small rewards close to the effort can help.
+        Waiting for a reward is often harder with ADHD, so small rewards soon after the effort may be easier to work for.
         <small className="stuck__src"> Marx et al. 2021</small>
       </p>
       <form

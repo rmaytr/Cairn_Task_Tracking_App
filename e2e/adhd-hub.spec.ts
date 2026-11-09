@@ -29,14 +29,14 @@ test.describe('ADHD toolkit hub', () => {
     await expect(page).toHaveURL(/#adhd\/learn$/)
     await expect(playbook(page).getByRole('article')).toHaveCount(0)
 
-    const card = library(page).getByRole('article', { name: 'Fresh starts are real' })
+    const card = library(page).getByRole('article', { name: 'Fresh starts give a boost' })
     await card.getByRole('button', { name: 'Helps me' }).click()
     await expect(card.getByRole('button', { name: 'Helps me' })).toHaveAttribute('aria-pressed', 'true')
-    await expect(playbook(page).getByRole('article', { name: 'Fresh starts are real' })).toBeVisible()
+    await expect(playbook(page).getByRole('article', { name: 'Fresh starts give a boost' })).toBeVisible()
 
     await expectPersisted(page, '"fresh-start":"helps"')
     await page.reload()
-    await expect(playbook(page).getByRole('article', { name: 'Fresh starts are real' })).toBeVisible()
+    await expect(playbook(page).getByRole('article', { name: 'Fresh starts give a boost' })).toBeVisible()
   })
 
   test('each "Right now" chip opens the right tool', async ({ page }) => {

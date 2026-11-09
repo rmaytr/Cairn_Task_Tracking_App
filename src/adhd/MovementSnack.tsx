@@ -78,8 +78,8 @@ export function MovementSnack({ onDone }: MovementSnackProps) {
         <input type="checkbox" checked={seated} onChange={(e) => setSeated(e.target.checked)} /> I’m sitting
       </label>
       <p className="stuck__why">
-        A short burst of movement may sharpen focus for a while afterwards. The effect is small but real.{' '}
-        <small>2022 meta-analysis in children with ADHD</small>
+        Exercise briefly helped focus in studies of children with ADHD. This short break is a lighter version.{' '}
+        <small>Chueh et al. 2022, meta-analysis</small>
       </p>
     </div>
   )

@@ -25,14 +25,14 @@ describe('WhatWorks', () => {
   it('marks a card, shows it in My playbook, and clears it when pressed again', () => {
     render(<WhatWorks />)
     const library = screen.getByRole('region', { name: 'All cards' })
-    const card = within(library).getByRole('article', { name: 'Fresh starts are real' })
+    const card = within(library).getByRole('article', { name: 'Fresh starts give a boost' })
     const helps = within(card).getByRole('button', { name: 'Helps me' })
 
     fireEvent.click(helps)
     expect(playbook()).toEqual({ 'fresh-start': 'helps' })
     expect(helps.getAttribute('aria-pressed')).toBe('true')
     const book = screen.getByRole('region', { name: 'My playbook' })
-    expect(within(book).getByRole('article', { name: 'Fresh starts are real' })).toBeTruthy()
+    expect(within(book).getByRole('article', { name: 'Fresh starts give a boost' })).toBeTruthy()
 
     fireEvent.click(helps)
     expect(playbook()).toEqual({})

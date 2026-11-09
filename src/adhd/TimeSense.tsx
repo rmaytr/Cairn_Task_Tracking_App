@@ -102,12 +102,12 @@ export function TimeSense() {
         </h2>
         <p>
           Most people underestimate how long tasks take, even ones they have done before. Looking back at how long similar
-          tasks really took makes the next guess more realistic (
-          <a href="https://bear.warrington.ufl.edu/brenner/mar7588/Papers/buehler-et-al-1994.pdf" target="_blank" rel="noreferrer">
+          tasks really took can make the next guess more realistic (
+          <a href="https://doi.org/10.1037/0022-3514.67.3.366" target="_blank" rel="noreferrer">
             Buehler and others, 1994
           </a>
           ). Research also links ADHD with differences in sensing time (Marx and others, 2022), so a clock you can see and
-          your own numbers can help more than willpower.
+          your own numbers may help.
         </p>
       </section>
 
