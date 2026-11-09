@@ -117,7 +117,8 @@
   border: 0;
   border-radius: 50%;
   background: var(--sw);
-  color: #fff;
+  /* The page colour: white on light themes, dark on dark ones where area colours are pastel. */
+  color: var(--surface);
   transition: transform 0.15s var(--ease-spring);
 }
 

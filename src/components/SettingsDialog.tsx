@@ -4,6 +4,7 @@ import { areaStyle } from '../hooks'
 import { MAX_AREAS } from '../model/defaults'
 import { AREA_COLORS, type Area } from '../model/types'
 import { useStore } from '../store/useStore'
+import { AppearanceSettings } from './AppearanceSettings'
 import { Dialog } from './Dialog'
 import { Icon } from './Icon'
 import { AssistantSettings, FeedbackSettings, ReminderSettings } from './SettingsSections'
@@ -43,7 +44,6 @@ export function SettingsDialog() {
 }
 
 function SettingsBody() {
-  const theme = useStore((s) => s.prefs.theme)
   const shortcuts = useStore((s) => s.prefs.shortcuts)
   const setPrefs = useStore((s) => s.setPrefs)
   const areas = useStore((s) => s.areas)
@@ -62,16 +62,7 @@ function SettingsBody() {
 
   return (
     <div className="dialog__body settings">
-      <section>
-        <h3>Look</h3>
-        <div className="seg" role="group" aria-label="Theme">
-          {(['system', 'light', 'dark'] as const).map((t) => (
-            <button key={t} type="button" aria-pressed={theme === t} onClick={() => setPrefs({ theme: t })}>
-              {t === 'system' ? 'Match device' : t === 'light' ? 'Light' : 'Dark'}
-            </button>
-          ))}
-        </div>
-      </section>
+      <AppearanceSettings />
 
       <section>
         <h3>Areas</h3>

@@ -5,6 +5,7 @@ import { formatDue } from '../lib/dates'
 import { guessIntents, type ActionId, type GoTarget, type Intent } from '../lib/intent'
 import { compareUrgency, effectiveHorizon } from '../model/derive'
 import { HORIZON_LABEL, type Area, type Task } from '../model/types'
+import { THEMES, resolveTheme } from '../model/themes'
 import { useStore } from '../store/useStore'
 import { Dialog } from './Dialog'
 import { Icon, type IconName } from './Icon'
@@ -105,9 +106,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       else if (id === 'reset') st.navigate({ view: 'reset', area: null })
       else if (id === 'shortcuts') st.setShortcutsOpen(true)
       else {
-        const theme = st.prefs.theme
-        const dark = theme === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : theme === 'dark'
-        st.setPrefs({ theme: dark ? 'light' : 'dark' })
+        const current = resolveTheme(st.prefs.theme, window.matchMedia('(prefers-color-scheme: dark)').matches)
+        const dark = THEMES.find((t) => t.id === current)?.dark ?? false
+        st.setPrefs({ theme: dark ? 'stone' : 'night' })
       }
     }
     const goLabel = (target: GoTarget): string =>

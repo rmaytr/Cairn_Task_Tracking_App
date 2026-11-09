@@ -2,6 +2,7 @@
 @import '@fontsource/instrument-sans/500.css';
 @import '@fontsource/instrument-sans/600.css';
 @import '@fontsource/instrument-serif/400.css';
+@import './themes.css';
 
 /* =====================================================================
    Cairn design system: "Cairn stone" (tasteskill app style: editorial greeting)
@@ -12,73 +13,12 @@
      stone and "soon"; berry only on what is overdue.
    - Instrument Sans for everything; Instrument Serif for each screen's one
      statement (Today's greeting, the Lock-in step). Figures at 400, tabular.
+   - Colours come from the theme blocks in themes.css (Stone is the default);
+     each theme swaps the hues but keeps these rules.
    ===================================================================== */
 :root {
-  color-scheme: light;
-
-  /* Surfaces */
-  --chrome: #eef0ec;
-  --canvas: #ffffff;
-  --panel: #f2f3ef;
-  --surface: #ffffff;
-  --surface-2: #f7f8f5;
-  --sunken: #e8ebe6;
-  --tonal: #e8ebe6;
-  --tonal-hover: #dde1da;
-  --line: #e6e8e3;
-  --line-strong: #cfd3cc;
-
-  /* Text */
-  --ink: #1f201d;
-  --ink-2: #4a4c47;
-  --ink-3: #63655f;
-
-  /* The one action colour: near-black, white label */
-  --action: #1f201d;
-  --action-hover: #33352f;
-  --on-action: #ffffff;
-
-  /* The one data hue (also selection and focus) */
-  --primary: #1b6e66;
-  --primary-hover: #155a53;
-  --primary-press: #114a44;
-  --on-primary: #ffffff;
-  --primary-soft: #e1efec;
-  --primary-soft-hover: #d2e8e3;
-  --primary-soft-ink: #12524c;
-
-  /* Signals */
-  --sun: #e9a930;
-  --sun-soft: #fbf0d9;
-  --sun-ink: #7a4e00;
-  --danger: #b42341;
-  --danger-soft: #fbe9ed;
-  --ok: #2e7d32;
-  --ok-soft: #e1f2e3;
-
-  /* Areas: dot/fill color, and a darker variant for text (4.5:1 on surfaces) */
-  --area-indigo: #5867e8;
-  --area-magenta: #d24d93;
-  --area-teal: #19a39a;
-  --area-amber: #e59a1a;
-  --area-violet: #9358e0;
-  --area-olive: #5fa33a;
-  --area-sky: #2e95d6;
-  --area-rose: #e2566a;
-  --area-indigo-text: #3d4abd;
-  --area-magenta-text: #a5306d;
-  --area-teal-text: #0b6b65;
-  --area-amber-text: #855400;
-  --area-violet-text: #6634b0;
-  --area-olive-text: #3a6a1f;
-  --area-sky-text: #175f91;
-  --area-rose-text: #ad3247;
-
-  /* Shadows only for what floats: menus, dialogs, the task sheet, toasts. */
+  /* Colour tokens live in themes.css, one block per theme. */
   --shadow-sm: none;
-  --shadow: 0 1px 2px rgb(20 22 18 / 0.06), 0 16px 40px -16px rgb(20 22 18 / 0.18);
-  --shadow-lg: 0 2px 6px rgb(20 22 18 / 0.06), 0 28px 64px -24px rgb(20 22 18 / 0.28);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 32%, transparent);
 
   --font: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
@@ -99,68 +39,16 @@
   --rail: 236px;
   --drawer: 400px;
   --topbar: 56px;
-
-  /* Aliases used by component styles */
-  --bg: var(--canvas);
-  --rule: var(--line);
-  --field-border: var(--line-strong);
   --wide: normal;
-  --hub: var(--ink);
-  --on-hub: var(--surface);
-  --ring-line: color-mix(in srgb, var(--ink) 12%, transparent);
-  --ring-fill: color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --chrome: #0d0e0d;
-  --canvas: #151615;
-  --panel: #1c1d1b;
-  --surface: #232421;
-  --surface-2: #1f201e;
-  --sunken: #0f100f;
-  --tonal: #2c2e2a;
-  --tonal-hover: #363934;
-  --line: #2c2e2a;
-  --line-strong: #41443e;
-  --ink: #f2f3ef;
-  --ink-2: #c6c9c2;
-  --ink-3: #9da19a;
-  --action: #f2f3ef;
-  --action-hover: #ffffff;
-  --on-action: #151615;
-  --primary: #5cc8b6;
-  --primary-hover: #7ad6c7;
-  --primary-press: #4ab7a5;
-  --on-primary: #06231f;
-  --primary-soft: #17312d;
-  --primary-soft-hover: #1d3d38;
-  --primary-soft-ink: #a9e8dc;
-  --sun: #f2c160;
-  --sun-soft: #352c17;
-  --sun-ink: #f6d58e;
-  --danger: #ff8aa0;
-  --danger-soft: #3a1d24;
-  --ok: #6fd39c;
-  --ok-soft: #173325;
-  --area-indigo: #8792ff;
-  --area-magenta: #f07ab6;
-  --area-teal: #4fd1c5;
-  --area-amber: #f5b54a;
-  --area-violet: #b892ff;
-  --area-olive: #93d36b;
-  --area-sky: #6cc0f5;
-  --area-rose: #ff8597;
-  --area-indigo-text: var(--area-indigo);
-  --area-magenta-text: var(--area-magenta);
-  --area-teal-text: var(--area-teal);
-  --area-amber-text: var(--area-amber);
-  --area-violet-text: var(--area-violet);
-  --area-olive-text: var(--area-olive);
-  --area-sky-text: var(--area-sky);
-  --area-rose-text: var(--area-rose);
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 18px 44px -16px rgb(0 0 0 / 0.7);
-  --shadow-lg: 0 2px 8px rgb(0 0 0 / 0.45), 0 30px 70px -20px rgb(0 0 0 / 0.8);
+/* Text size (Settings > Appearance): every type step is in rem, so this scales all text. */
+:root[data-text-size='large'] {
+  font-size: 112.5%;
+}
+
+:root[data-text-size='larger'] {
+  font-size: 125%;
 }
 
 /* ---------- Base ---------- */
