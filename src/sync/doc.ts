@@ -37,6 +37,8 @@ const taskSchema = z
     low: z.boolean().optional().catch(undefined),
     after: z.array(z.string()).optional().catch(undefined).transform((ids) => ids?.slice(0, 50)),
     repeatAnchor: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
+    rank: z.number().optional().catch(undefined),
+    snoozes: z.number().int().nonnegative().optional().catch(undefined),
   })
   // Drop undefined optionals so documents compare equal across devices.
   .transform((task): Task => Object.fromEntries(Object.entries(task).filter(([, v]) => v !== undefined)) as unknown as Task)

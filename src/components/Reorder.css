@@ -1,0 +1,57 @@
+/* Drag to reorder (useReorderDrag): the drop gap, the lifted item and its floating copy. */
+.drop-gap {
+  box-sizing: border-box;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-m);
+  list-style: none;
+  pointer-events: none;
+}
+
+.drop-gap.is-growing {
+  animation: drop-gap-grow 0.2s var(--ease-out);
+}
+
+@keyframes drop-gap-grow {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Out of the flow (the gap stands in) but still in the DOM, so a touch that started on it keeps going. */
+[data-drag-state='lifted'] {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+[data-drag-state='settling'] {
+  visibility: hidden;
+}
+
+body > .drag-ghost {
+  z-index: 1000;
+  box-sizing: border-box;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  list-style: none;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  transition: box-shadow 0.3s var(--ease-out);
+  will-change: transform;
+}
+
+body > .drag-ghost.is-settling {
+  box-shadow: 0 0 0 transparent;
+}
+
+.is-reordering,
+.is-reordering * {
+  cursor: grabbing !important;
+  -webkit-user-select: none;
+  user-select: none;
+}

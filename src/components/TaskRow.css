@@ -190,6 +190,49 @@
   }
 }
 
+/* Reorder grip: in the left padding on hover/focus with a mouse; always there on touch, where it drags at once. */
+.trow__grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  color: var(--ink-3);
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.trow__grip:hover {
+  color: var(--ink);
+}
+
+.trow:hover .trow__grip,
+.trow:focus-within .trow__grip {
+  opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .trow__grip {
+    position: static;
+    flex: none;
+    width: 28px;
+    height: 40px;
+    margin: 0 -8px 0 -10px;
+    opacity: 0.75;
+  }
+
+  /* A long press picks the row up: no text selection or iOS callout in the way. */
+  .trow__slide {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
 .trow__flag {
   display: inline-grid;
   place-items: center;

@@ -7,6 +7,9 @@ import { TEXT_SIZES, THEME_PREFS } from '../model/themes'
 /** Themes used to be just light/dark; those map to Stone and Night. */
 const LEGACY_THEMES: Record<string, string> = { light: 'stone', dark: 'night' }
 
+/** Orders the Tasks list offers; 'manual' is "My order" (task.rank). */
+export const LIST_SORTS = ['smart', 'due', 'priority', 'manual'] as const
+
 const stepSchema = z.object({ id: z.string(), title: z.string(), done: z.boolean() })
 
 export const taskSchema = z.object({
@@ -32,6 +35,7 @@ export const taskSchema = z.object({
   after: z.array(z.string()).optional().catch(undefined).transform((ids) => ids?.slice(0, 50)),
   snoozes: z.number().int().nonnegative().optional().catch(undefined),
   repeatAnchor: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
+  rank: z.number().optional().catch(undefined),
 })
 
 export const areaSchema = z.object({
@@ -69,6 +73,10 @@ export const prefsSchema = z.object({
     .object({ date: z.string(), ids: z.array(z.string()).max(200), summary: z.string().max(300) })
     .nullable()
     .catch(null),
+  /** Sort of the Tasks list, kept across navigation and reloads. */
+  listSort: z
+    .object({ sort: z.enum(LIST_SORTS), reverse: z.boolean() })
+    .catch({ sort: 'smart', reverse: false }),
 })
 
 export type Prefs = z.infer<typeof prefsSchema>
@@ -86,6 +94,7 @@ export const DEFAULT_PREFS: Prefs = {
   ai: openProxy ? 'proxy' : 'off',
   feedback: { sound: false, haptics: true },
   dayPlan: null,
+  listSort: { sort: 'smart', reverse: false },
 }
 
 export interface PersistedState {

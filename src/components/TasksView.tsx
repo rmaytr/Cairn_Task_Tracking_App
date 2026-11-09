@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { areaStyle, useAreaMap } from '../hooks'
 import { MapView } from '../map/MapView'
 import { RadarView } from '../radar/RadarView'
@@ -20,6 +20,7 @@ const SORTS: readonly { value: ListSort; label: string }[] = [
   { value: 'smart', label: 'Smart order' },
   { value: 'due', label: 'Due date' },
   { value: 'priority', label: 'Priority' },
+  { value: 'manual', label: 'My order' },
 ]
 
 /** All tasks, or one area's tasks, as a list, a map or a radar. */
@@ -33,7 +34,11 @@ export function TasksView() {
   const dotsRef = useRef<HTMLButtonElement>(null)
   const [renaming, setRenaming] = useState(false)
   const area = useAreaMap().get(areaId ?? '')
-  const [filters, setFilters] = useState<ListFilters>({ sort: 'smart', reverse: false, showDone: false, query: '' })
+  // Sort and direction persist (prefs); search and "show done" reset per visit.
+  const listSort = useStore((s) => s.prefs.listSort)
+  const setPrefs = useStore((s) => s.setPrefs)
+  const [local, setLocal] = useState({ showDone: false, query: '' })
+  const filters = useMemo((): ListFilters => ({ ...listSort, ...local }), [listSort, local])
   const title = area?.name ?? 'All tasks'
   const missingArea = areaId !== null && !area
 
@@ -106,7 +111,7 @@ export function TasksView() {
               <input
                 type="search"
                 value={filters.query}
-                onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+                onChange={(e) => setLocal({ ...local, query: e.target.value })}
                 placeholder={area ? `Search ${area.name}` : 'Search tasks'}
                 aria-label="Search tasks"
               />
@@ -114,7 +119,7 @@ export function TasksView() {
             <label className="tasks__sort">
               <Icon name="sort" size={16} />
               <span className="visually-hidden">Sort by</span>
-              <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value as ListSort })}>
+              <select value={filters.sort} onChange={(e) => setPrefs({ listSort: { ...listSort, sort: e.target.value as ListSort } })}>
                 {SORTS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -126,7 +131,7 @@ export function TasksView() {
               type="button"
               className="icon-btn tasks__toggle"
               aria-pressed={filters.reverse}
-              onClick={() => setFilters({ ...filters, reverse: !filters.reverse })}
+              onClick={() => setPrefs({ listSort: { ...listSort, reverse: !listSort.reverse } })}
               aria-label="Reverse order"
               title="Reverse order"
             >
@@ -136,7 +141,7 @@ export function TasksView() {
               type="button"
               className="icon-btn tasks__toggle"
               aria-pressed={filters.showDone}
-              onClick={() => setFilters({ ...filters, showDone: !filters.showDone })}
+              onClick={() => setLocal({ ...local, showDone: !local.showDone })}
               aria-label="Show done tasks"
               title="Show done tasks"
             >

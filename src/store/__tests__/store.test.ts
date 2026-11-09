@@ -224,3 +224,71 @@ describe('moveArea', () => {
     expect(ids().at(-1)).toBe(last)
   })
 })
+
+describe('reorderTasks', () => {
+  const add = (title: string, horizon: 'today' | 'week' = 'today') => state().addTask({ title, horizon }, 'classes')
+  const rankOf = (id: string) => state().tasks.find((t) => t.id === id)?.rank
+
+  it('stamps ranks in the given order as one undoable change', () => {
+    const [a, b, c] = [add('A'), add('B'), add('C')]
+    state().reorderTasks([c, a, b], c, undefined, 'Switched to My order')
+    expect(rankOf(c)!).toBeLessThan(rankOf(a)!)
+    expect(rankOf(a)!).toBeLessThan(rankOf(b)!)
+    expect(state().toast).toMatchObject({ message: 'Switched to My order', undoable: true })
+    state().undo()
+    expect([a, b, c].map(rankOf)).toEqual([undefined, undefined, undefined])
+  })
+
+  it('later moves change only the moved task', () => {
+    const [a, b, c] = [add('A'), add('B'), add('C')]
+    state().reorderTasks([a, b, c], a)
+    const before = state().tasks.map((t) => ({ ...t }))
+    state().reorderTasks([a, c, b], c)
+    const changed = state().tasks.filter((t, i) => t.rank !== before[i]?.rank).map((t) => t.id)
+    expect(changed).toEqual([c])
+  })
+
+  it('moves the task to another horizon in the same undo step', () => {
+    const [a, b] = [add('A'), add('B', 'week')]
+    state().reorderTasks([b, a], b, { horizon: 'today' }, 'Moved to Today')
+    expect(state().tasks.find((t) => t.id === b)).toMatchObject({ horizon: 'today' })
+    state().undo()
+    expect(state().tasks.find((t) => t.id === b)).toMatchObject({ horizon: 'week' })
+    expect(rankOf(b)).toBeUndefined()
+  })
+
+  it('does nothing (and keeps a pending undo) when nothing would change', () => {
+    const [a, b] = [add('A'), add('B')]
+    state().reorderTasks([a, b], a)
+    const toast = state().toast
+    state().reorderTasks([a, b], a)
+    expect(state().toast).toBe(toast)
+  })
+})
+
+describe('moveStep', () => {
+  it('moves a step within its task, clamped, with undo', () => {
+    const id = state().addTask({ title: 'Essay', steps: [{ title: 'one' }, { title: 'two' }, { title: 'three' }] }, 'classes')
+    const titles = () => state().tasks[0].steps.map((s) => s.title)
+    const third = state().tasks[0].steps[2].id
+    state().moveStep(id, third, 0)
+    expect(titles()).toEqual(['three', 'one', 'two'])
+    state().moveStep(id, third, 99)
+    expect(titles()).toEqual(['one', 'two', 'three'])
+    state().undo()
+    expect(titles()).toEqual(['three', 'one', 'two'])
+  })
+})
+
+describe('list sort prefs', () => {
+  it('keeps a saved sort and falls back to smart order for junk', () => {
+    expect(sanitizePersisted({ prefs: { listSort: { sort: 'manual', reverse: true } } }).prefs.listSort).toEqual({ sort: 'manual', reverse: true })
+    expect(sanitizePersisted({ prefs: { listSort: { sort: 'nope' } } }).prefs.listSort).toEqual({ sort: 'smart', reverse: false })
+  })
+
+  it('keeps a task rank and drops a broken one', () => {
+    const base = { id: 't', title: 'T', areaId: 'classes', createdAt: 1, updatedAt: 1 }
+    const { tasks } = sanitizePersisted({ tasks: [{ ...base, rank: 2.5 }, { ...base, id: 'u', rank: 'x' }] })
+    expect(tasks.map((t) => t.rank)).toEqual([2.5, undefined])
+  })
+})
