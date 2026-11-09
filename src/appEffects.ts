@@ -13,9 +13,10 @@ export const VIEW_TITLE: Record<View, string> = {
   tasks: 'Tasks',
   focus: 'Lock in',
   reset: 'Weekly reset',
+  adhd: 'ADHD toolkit',
 }
 
-const SHORTCUT_VIEWS: readonly View[] = ['home', 'tasks', 'focus']
+const SHORTCUT_VIEWS: readonly View[] = ['home', 'tasks', 'focus', 'adhd']
 
 /** index.html's inline script reads this before first paint, so a chosen theme doesn't flash. */
 const APPEARANCE_KEY = 'cairn-appearance'

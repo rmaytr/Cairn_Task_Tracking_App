@@ -104,7 +104,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     const go = (target: GoTarget): void => {
       if (target === 'settings') st.setSettingsOpen(true)
       else if (target.startsWith('area:')) st.navigate({ view: 'tasks', area: target.slice(5) })
-      else st.navigate({ view: target as 'home' | 'tasks' | 'focus' | 'reset', area: null })
+      else st.navigate({ view: target as 'home' | 'tasks' | 'focus' | 'reset' | 'adhd', area: null })
     }
     const runAction = (id: ActionId): void => {
       if (id === 'new-task') st.setQuickAddOpen(true)
@@ -121,7 +121,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       }
     }
     const goLabel = (target: GoTarget): string =>
-      target.startsWith('area:') ? areaName(target.slice(5)) : { home: 'Today', tasks: 'All tasks', focus: 'Lock in', reset: 'Weekly reset', settings: 'Settings' }[target as string] ?? ''
+      target.startsWith('area:') ? areaName(target.slice(5)) : { home: 'Today', tasks: 'All tasks', focus: 'Lock in', reset: 'Weekly reset', adhd: 'ADHD toolkit', settings: 'Settings' }[target as string] ?? ''
 
     const describe = (intent: Intent): Item | null | undefined => {
       const t = 'taskId' in intent ? taskById(intent.taskId) : undefined
@@ -187,6 +187,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       { target: 'home', icon: 'home' },
       { target: 'tasks', icon: 'list' },
       { target: 'focus', icon: 'focus' },
+      { target: 'adhd', icon: 'brain' },
       ...areas.map((a): { target: GoTarget; icon: IconName } => ({ target: `area:${a.id}`, icon: 'arrowRight' })),
     ]
     for (const p of places) {

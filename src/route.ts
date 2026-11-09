@@ -1,9 +1,11 @@
 /**
  * App navigation lives in the URL hash so refresh and back work, and GitHub Pages needs
  * no server routing:
- *   #home · #tasks · #tasks/map · #tasks/radar · #area/<id>[/map|/radar] · #focus · #reset
+ *   #home · #tasks · #tasks/map · #tasks/radar · #area/<id>[/map|/radar] · #focus · #reset · #adhd[/<tool>]
  */
-export type View = 'home' | 'tasks' | 'focus' | 'reset'
+import { ADHD_TOOLS, type AdhdTool } from './adhd/types'
+
+export type View = 'home' | 'tasks' | 'focus' | 'reset' | 'adhd'
 export type TasksMode = 'list' | 'map' | 'radar'
 
 export interface Route {
@@ -11,6 +13,8 @@ export interface Route {
   mode: TasksMode
   /** When set, Tasks shows only this area. */
   area: string | null
+  /** ADHD toolkit page; null is the hub. Only present when view is 'adhd'. */
+  tool?: AdhdTool | null
 }
 
 export const HOME: Route = { view: 'home', mode: 'list', area: null }
@@ -32,6 +36,10 @@ function safeDecode(value: string): string | null {
 export function parseHash(hash: string): Route {
   const [head = '', second, third] = hash.replace(/^#\/?/, '').split('/')
   if (head === 'focus' || head === 'reset') return { ...HOME, view: head }
+  if (head === 'adhd') {
+    const tool = ADHD_TOOLS.includes(second as AdhdTool) ? (second as AdhdTool) : null
+    return { ...HOME, view: 'adhd', tool }
+  }
   if (head === 'tasks') return { view: 'tasks', mode: asMode(second), area: null }
   if (head === 'area' && second) {
     const area = safeDecode(second)
@@ -43,6 +51,7 @@ export function parseHash(hash: string): Route {
 }
 
 export function routeToHash(route: Route): string {
+  if (route.view === 'adhd') return route.tool ? `#adhd/${route.tool}` : '#adhd'
   if (route.view !== 'tasks') return `#${route.view}`
   const mode = route.mode === 'list' ? '' : `/${route.mode}`
   return route.area ? `#area/${encodeURIComponent(route.area)}${mode}` : `#tasks${mode}`

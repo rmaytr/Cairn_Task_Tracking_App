@@ -20,6 +20,7 @@ const NAV: readonly { view: View; label: string; icon: IconName; key: string }[]
   { view: 'home', label: 'Today', icon: 'home', key: '1' },
   { view: 'tasks', label: 'All tasks', icon: 'list', key: '2' },
   { view: 'focus', label: 'Lock in', icon: 'target', key: '3' },
+  { view: 'adhd', label: 'ADHD toolkit', icon: 'brain', key: '4' },
 ]
 
 function useOpenCounts(): Map<string, number> {
@@ -382,6 +383,16 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         <div className="dialog__body more">
           <AreaNav onPick={onClose} />
           <div className="more__links">
+            <button
+              type="button"
+              className="side__link"
+              onClick={() => {
+                navigate({ view: 'adhd', area: null })
+                onClose()
+              }}
+            >
+              <Icon name="brain" size={19} /> ADHD toolkit
+            </button>
             <button
               type="button"
               className="side__link"

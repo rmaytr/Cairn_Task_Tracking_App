@@ -1,0 +1,44 @@
+.adhd {
+  width: min(100%, 880px);
+  margin-inline: auto;
+  padding: 24px 20px 96px;
+}
+
+.adhd__crumbs {
+  margin-bottom: 8px;
+}
+
+.adhd__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px 6px 4px;
+  border-radius: var(--radius-xs);
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.adhd__back svg {
+  transform: rotate(180deg);
+}
+
+.adhd__back:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.adhd__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .adhd {
+    padding: 16px 16px 112px;
+  }
+}

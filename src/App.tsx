@@ -1,5 +1,6 @@
 import { useCloud, useFinishFeedback, useFocusTimer, useHashView, useInviteLink, useShortcuts, useStorageErrors, useTheme } from './appEffects'
 import { useReminders } from './reminders/useReminders'
+import { AdhdView } from './adhd/AdhdView'
 import { AccountDialog } from './components/AccountDialog'
 import { LockInView } from './components/LockInView'
 import { HomeView } from './components/HomeView'
@@ -56,6 +57,7 @@ export default function App() {
           {view === 'tasks' && <TasksView />}
           {view === 'focus' && <LockInView />}
           {view === 'reset' && <ResetView />}
+          {view === 'adhd' && <AdhdView />}
         </div>
       </main>
       <TaskDetail />

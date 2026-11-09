@@ -9,6 +9,7 @@ const ROWS: { keys: string[]; what: string; single?: boolean }[] = [
   { keys: ['1'], what: 'Today', single: true },
   { keys: ['2'], what: 'Tasks', single: true },
   { keys: ['3'], what: 'Lock in', single: true },
+  { keys: ['4'], what: 'ADHD toolkit', single: true },
   { keys: ['i'], what: 'Import', single: true },
   { keys: ['z'], what: 'Undo', single: true },
   { keys: ['Esc'], what: 'Close the open task or dialog' },
