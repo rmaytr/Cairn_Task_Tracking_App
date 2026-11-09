@@ -49,6 +49,9 @@ interface Session {
   dy: number
   scale: number
   moved: boolean
+  /** A pointermove is waiting for the next frame. */
+  pending: boolean
+  cache: Measure
   scroller: HTMLElement | null
   raf: number
   stop: () => void
@@ -79,17 +82,36 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
   return null
 }
 
-function hitTest(root: HTMLElement, scope: string, id: string, y: number): DropSpot | null {
-  let best: HTMLElement | null = null
-  let bestDistance = Infinity
-  for (const group of root.querySelectorAll<HTMLElement>(groupSelector(scope))) {
+/** Group and row positions in viewport px at one scroll offset; kept while a drag runs. */
+interface Measure {
+  scroll: number
+  groups: { key: string; top: number; bottom: number; mids: number[] }[]
+}
+
+const scrollPos = (scroller: HTMLElement | null): number => (scroller ? scroller.scrollTop : window.scrollY)
+
+/** Reads every group and row once (forces layout), leaving out the dragged item. */
+function measure(root: HTMLElement, scope: string, id: string, scroller: HTMLElement | null): Measure {
+  const groups = [...root.querySelectorAll<HTMLElement>(groupSelector(scope))].flatMap((group) => {
+    const key = group.dataset.dropGroup
+    if (!key) return []
     const top = layoutTop(group, root)
-    const distance = Math.max(0, top - y, y - top - group.offsetHeight)
+    const rows = [...group.querySelectorAll<HTMLElement>(itemSelector(scope))].filter((r) => r.dataset.dragId !== id)
+    return [{ key, top, bottom: top + group.offsetHeight, mids: rows.map((r) => layoutTop(r, root) + r.offsetHeight / 2) }]
+  })
+  return { scroll: scrollPos(scroller), groups }
+}
+
+function hitTest(m: Measure, scroller: HTMLElement | null, y: number): DropSpot | null {
+  // Scrolling since the measurement moved everything by the same amount.
+  const shift = m.scroll - scrollPos(scroller)
+  let best: Measure['groups'][number] | null = null
+  let bestDistance = Infinity
+  for (const group of m.groups) {
+    const distance = Math.max(0, group.top + shift - y, y - group.bottom - shift)
     if (distance < bestDistance) [best, bestDistance] = [group, distance]
   }
-  if (!best?.dataset.dropGroup) return null
-  const rows = [...best.querySelectorAll<HTMLElement>(itemSelector(scope))].filter((r) => r.dataset.dragId !== id)
-  return { group: best.dataset.dropGroup, index: rows.filter((r) => layoutTop(r, root) + r.offsetHeight / 2 < y).length }
+  return best ? { group: best.key, index: best.mids.filter((mid) => mid + shift < y).length } : null
 }
 
 /** A look-alike of the item that floats above the page while the real one holds its place. */
@@ -113,13 +135,18 @@ const paint = (s: Pick<Session, 'clone' | 'dy' | 'scale'>): void => {
 
 /** Swallows the click that follows a drag, so dropping a row doesn't also open it. */
 function swallowNextClick(): void {
-  const off = (): void => window.removeEventListener('click', block, true)
+  const off = (): void => {
+    window.removeEventListener('click', block, true)
+    window.removeEventListener('pointerdown', off, true)
+  }
   const block = (e: MouseEvent): void => {
     e.preventDefault()
     e.stopPropagation()
     off()
   }
   window.addEventListener('click', block, true)
+  // A new press means the click we were waiting for is not coming.
+  window.addEventListener('pointerdown', off, true)
   // A touch "tap" click can arrive a little after pointerup; nothing real is clicked this fast.
   window.setTimeout(off, CLICK_GRACE_MS)
 }
@@ -158,7 +185,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     s.moved ||= Math.abs(clientY - s.startY) > SLOP_PX
     s.dy = clientY - s.grabY - s.startTop
     paint(s)
-    const next = hitTest(root, scope, s.id, clientY - s.grabY + s.height / 2)
+    const next = hitTest(s.cache, s.scroller, clientY - s.grabY + s.height / 2)
     if (!next || (next.group === s.over.group && next.index === s.over.index)) return
     s.over = next
     setSpot({ ...next, id: s.id, height: s.height, fresh: false, settling: false })
@@ -167,9 +194,11 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
   const end = (commit: boolean): void => {
     const s = session.current
     if (!s) return
+    if (s.pending) move(s.y)
     session.current = null
     s.stop()
-    swallowNextClick()
+    // Only a drag that moved can be followed by a click on the row; Escape or a cancel must not eat a real tap.
+    if (commit && s.moved) swallowNextClick()
     const changed = commit && (s.over.group !== s.from.group || s.over.index !== s.from.index)
     if (changed) latest.current.onDrop({ id: s.id, from: s.from.group, ...s.over })
     settle.current = { s, anim: null }
@@ -191,6 +220,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     } catch {
       // The pointer is already gone; window listeners still end the drag.
     }
+    const scroller = scrollParent(root)
     const s: Session = {
       id,
       from,
@@ -205,12 +235,17 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
       dy: 0,
       scale: 1,
       moved: false,
-      scroller: scrollParent(root),
+      pending: false,
+      cache: measure(root, scope, id, scroller),
+      scroller,
       raf: 0,
       stop: () => {},
     }
     const onMove = (e: PointerEvent): void => {
-      if (e.pointerId === pointerId) move(e.clientY)
+      if (e.pointerId !== pointerId) return
+      // One hit-test per frame, however fast the pointer reports.
+      s.y = e.clientY
+      s.pending = true
     }
     const onUp = (e: PointerEvent): void => {
       if (e.pointerId === pointerId) end(true)
@@ -230,6 +265,10 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
       e.stopPropagation()
     }
     const tick = (): void => {
+      if (s.pending) {
+        s.pending = false
+        move(s.y)
+      }
       const box = s.scroller?.getBoundingClientRect()
       const top = Math.max(0, box?.top ?? 0)
       const bottom = Math.min(window.innerHeight, box?.bottom ?? window.innerHeight)
@@ -266,6 +305,15 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     }
     s.raf = requestAnimationFrame(tick)
   }
+
+  // The gap changes the layout, so refresh the cached positions once React has rendered it.
+  const gapGroup = spot?.group
+  const gapIndex = spot?.index
+  useLayoutEffect(() => {
+    const s = session.current
+    const root = rootRef.current
+    if (s && root) s.cache = measure(root, scope, s.id, s.scroller)
+  }, [gapGroup, gapIndex, scope, rootRef])
 
   // Once the list shows the drop, fly the copy onto the item's new place, then reveal the item.
   const settling = spot?.settling ?? false
@@ -305,6 +353,7 @@ export function useReorderDrag(scope: string, rootRef: RefObject<HTMLElement | n
     () => () => {
       session.current?.stop()
       session.current?.clone.remove()
+      settle.current?.anim?.stop()
       settle.current?.s.clone.remove()
     },
     [],

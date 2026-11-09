@@ -41,6 +41,17 @@ test.describe('reorder', () => {
     await expect(page.locator('.tasks__sort select')).toHaveValue('manual')
   })
 
+  test('the row menu moves a task without dragging or shortcuts', async ({ page }) => {
+    await loadSample(page)
+    await page.goto('/#tasks')
+    const [first, second] = await classesTitles(page)
+    const row = page.locator('.list__group').first().locator('.trow').first()
+    await row.locator('.trow__dots').click()
+    await expect(page.getByRole('menuitem', { name: 'Move up' })).toHaveCount(0)
+    await page.getByRole('menuitem', { name: 'Move down' }).click()
+    await expect.poll(() => classesTitles(page).then((t) => t.slice(0, 2))).toEqual([second, first])
+  })
+
   test('Escape cancels a drag', async ({ page }) => {
     await loadSample(page)
     await page.goto('/#tasks')

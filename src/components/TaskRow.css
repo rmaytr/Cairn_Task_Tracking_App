@@ -105,11 +105,6 @@
   text-align: left;
 }
 
-.trow__body:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .trow__title {
   display: -webkit-box;
   overflow: hidden;
@@ -169,11 +164,6 @@
 .trow__dots:hover {
   background: var(--sunken);
   color: var(--ink);
-}
-
-.trow__dots:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
 }
 
 .trow__main[draggable='true'] {
@@ -321,11 +311,6 @@
   border-color: var(--primary);
   background: var(--primary-soft);
   color: var(--primary-soft-ink);
-}
-
-.add-row:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
 }
 
 @media (max-width: 760px) {

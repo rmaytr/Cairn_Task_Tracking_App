@@ -35,6 +35,14 @@ export function StepList({ task, compact = false }: StepListProps) {
     moveStep(task.id, stepId, to)
     setSaid((s) => ({ text: `Moved step ‘${step.title}’ to position ${to + 1} of ${task.steps.length}`, n: s.n + 1 }))
   }
+  /** One place up or down, then back to the step's text so keyboard users keep their spot. */
+  const nudge = (stepId: string, to: number): void => {
+    if (to < 0 || to >= task.steps.length) return
+    move(stepId, to)
+    requestAnimationFrame(() => {
+      rootRef.current?.querySelector<HTMLInputElement>(`[data-drag-id="${CSS.escape(stepId)}"] .steps__text`)?.focus()
+    })
+  }
   const drag = useReorderDrag(SCOPE, rootRef, ({ id, index }) => move(id, index))
 
   const rows: ReactNode[] = task.steps.map((step, i) => (
@@ -69,12 +77,7 @@ export function StepList({ task, compact = false }: StepListProps) {
             // Steps move themselves; the row around them must not move the task too.
             e.preventDefault()
             e.stopPropagation()
-            const to = i + delta
-            if (to < 0 || to >= task.steps.length) return
-            move(step.id, to)
-            requestAnimationFrame(() => {
-              rootRef.current?.querySelector<HTMLInputElement>(`[data-drag-id="${CSS.escape(step.id)}"] .steps__text`)?.focus()
-            })
+            nudge(step.id, i + delta)
             return
           }
           if (e.key === 'Enter') {
@@ -83,6 +86,18 @@ export function StepList({ task, compact = false }: StepListProps) {
           }
         }}
       />
+      <span className="steps__move">
+        {i > 0 && (
+          <button type="button" className="steps__nudge" onClick={() => nudge(step.id, i - 1)} aria-label={`Move step ${step.title} up`}>
+            <Icon name="arrowUp" size={14} />
+          </button>
+        )}
+        {i < task.steps.length - 1 && (
+          <button type="button" className="steps__nudge" onClick={() => nudge(step.id, i + 1)} aria-label={`Move step ${step.title} down`}>
+            <Icon name="arrowDown" size={14} />
+          </button>
+        )}
+      </span>
       <button type="button" className="icon-btn steps__del" onClick={() => deleteStep(task.id, step.id)} aria-label={`Remove step ${step.title}`}>
         <Icon name="close" size={16} />
       </button>
