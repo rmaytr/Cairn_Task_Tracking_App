@@ -6,7 +6,7 @@ import { AREA_COLORS, type Area } from '../model/types'
 import { useStore } from '../store/useStore'
 import { Dialog } from './Dialog'
 import { Icon } from './Icon'
-import { AssistantSettings, ReminderSettings } from './SettingsSections'
+import { AssistantSettings, FeedbackSettings, ReminderSettings } from './SettingsSections'
 import './SettingsDialog.css'
 
 const SHORTCUTS: readonly [string, string][] = [
@@ -99,6 +99,8 @@ function SettingsBody() {
       <AssistantSettings />
 
       <ReminderSettings />
+
+      <FeedbackSettings />
 
       <section>
         <h3>Your data</h3>

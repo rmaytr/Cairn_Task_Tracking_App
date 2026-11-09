@@ -10,6 +10,15 @@ export interface LockInPlan {
   source: 'assistant' | 'local'
 }
 
+/** What the Lock-in start screen can narrow the pick to. */
+export type EffortFilter = 'any' | 'quick' | 'big'
+
+/** Open tasks that fit the filter: quick wins are effort s (about 20 min), big pushes effort l. */
+export function filterByEffort(tasks: readonly Task[], filter: EffortFilter): Task[] {
+  const effort = filter === 'quick' ? 's' : filter === 'big' ? 'l' : null
+  return tasks.filter((t) => !t.done && (effort === null || t.effort === effort))
+}
+
 /** A plain-language reason from the task's own facts, used when the assistant isn't. */
 export function localReason(task: Task, tasks: readonly Task[], now: Date): string | null {
   const waitingOnIt = dependents(tasks, task.id).length

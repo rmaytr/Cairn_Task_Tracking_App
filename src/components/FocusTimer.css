@@ -1,0 +1,89 @@
+.ftimer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.ftimer__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 2px;
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  font-weight: 560;
+}
+
+.ftimer--run {
+  gap: 4px 18px;
+}
+
+.ftimer__ring {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  transform: rotate(-90deg);
+}
+
+.ftimer__track,
+.ftimer__arc {
+  fill: none;
+  stroke-width: 7;
+}
+
+.ftimer__track {
+  stroke: var(--sunken);
+}
+
+.ftimer__arc {
+  stroke: var(--primary);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.ftimer__read {
+  display: grid;
+  gap: 2px;
+  min-width: 7ch;
+}
+
+.ftimer__time {
+  color: var(--ink);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.ftimer__until {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.ftimer__btns {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.ftimer--done {
+  padding: 10px 14px;
+  border-radius: var(--radius-s);
+  background: var(--primary-soft);
+}
+
+.ftimer__msg {
+  flex: 1 1 auto;
+  color: var(--primary-soft-ink);
+  font-weight: 560;
+}
+
+@media (max-width: 760px) {
+  .ftimer__ring {
+    width: 80px;
+    height: 80px;
+  }
+
+  .ftimer__time {
+    font-size: 2.1rem;
+  }
+}

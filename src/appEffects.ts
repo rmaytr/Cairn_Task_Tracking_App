@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { proxyAvailable, resetTransport, saveInvite } from './assist/assistant'
 import { initCloud } from './cloud/controller'
 import { useMediaQuery } from './hooks'
+import { tock } from './lib/feedback'
 import { onStorageError } from './store/persist'
 import { parseHash } from './route'
 import { currentHash, useStore, type View } from './store/useStore'
@@ -25,6 +26,17 @@ export function useTheme(): void {
     const meta = document.querySelector('meta[name="theme-color"]')
     meta?.setAttribute('content', resolved === 'dark' ? '#0e1412' : '#eef3f0')
   }, [resolved])
+}
+
+/** A soft tock and haptic whenever a task is completed, wherever that happens. */
+export function useFinishFeedback(): void {
+  useEffect(
+    () =>
+      useStore.subscribe((s, prev) => {
+        if (s.lastCompleted && s.lastCompleted !== prev.lastCompleted) tock(s.prefs.feedback)
+      }),
+    [],
+  )
 }
 
 /** Mirrors the route in location.hash so refresh and the back button behave. */

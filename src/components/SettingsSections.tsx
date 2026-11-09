@@ -10,12 +10,40 @@ import {
   saveApiKey,
   saveInvite,
 } from '../assist/assistant'
+import { tock } from '../lib/feedback'
 import { useStore } from '../store/useStore'
 import { Icon } from './Icon'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const hourLabel = (h: number): string =>
   new Date(2026, 0, 1, h).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
+/** Small rewards for finishing: a soft tock and a short vibration. */
+export function FeedbackSettings() {
+  const feedback = useStore((s) => s.prefs.feedback)
+  const setPrefs = useStore((s) => s.setPrefs)
+  return (
+    <section>
+      <h3>When you finish something</h3>
+      <label className="settings__toggle">
+        <input
+          type="checkbox"
+          className="check check--square"
+          checked={feedback.sound}
+          onChange={(e) => {
+            setPrefs({ feedback: { ...feedback, sound: e.target.checked } })
+            if (e.target.checked) tock({ sound: true, haptics: false })
+          }}
+        />
+        Play a soft sound (also the timer chime)
+      </label>
+      <label className="settings__toggle">
+        <input type="checkbox" className="check check--square" checked={feedback.haptics} onChange={(e) => setPrefs({ feedback: { ...feedback, haptics: e.target.checked } })} />
+        Vibrate briefly on phones
+      </label>
+    </section>
+  )
+}
 
 export function ReminderSettings() {
   const reminders = useStore((s) => s.prefs.reminders)

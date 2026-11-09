@@ -5,14 +5,22 @@ import { assistantError, getTransport } from '../assist/assistant'
 import { areaStyle, useAreaMap, useNow, useReducedMotion } from '../hooks'
 import { nextStep } from '../model/derive'
 import type { Task } from '../model/types'
-import { localPlan, mergeAssistantPlan, pinnedPlan, type LockInPlan } from '../plan/lockin'
+import { workedMinutes, type FocusTimer as Timer } from '../model/timer'
+import { filterByEffort, localPlan, mergeAssistantPlan, pinnedPlan, type EffortFilter, type LockInPlan } from '../plan/lockin'
 import { useStore } from '../store/useStore'
 import { DuePill } from './DueDate'
+import { FocusTimer } from './FocusTimer'
 import { Icon } from './Icon'
 import { Stones } from './Stones'
 import './LockInView.css'
 
 type Phase = { kind: 'start' } | { kind: 'planning' } | { kind: 'go'; plan: LockInPlan; index: number }
+
+const FILTERS: { id: EffortFilter; label: string }[] = [
+  { id: 'any', label: 'Anything' },
+  { id: 'quick', label: 'Quick wins' },
+  { id: 'big', label: 'Big push' },
+]
 
 /**
  * Lock in: when everything feels like too much, Cairn picks one thing (with the assistant if
@@ -30,7 +38,19 @@ export function LockInView() {
     focusTaskId ? { kind: 'go', plan: pinnedPlan(focusTaskId, useStore.getState().tasks, new Date()), index: 0 } : { kind: 'start' },
   )
   const [stones, setStones] = useState(0)
+  const [filter, setFilter] = useState<EffortFilter>('any')
+  const [timer, setTimer] = useState<{ taskId: string; timer: Timer } | null>(null)
+  const updateTask = useStore((s) => s.updateTask)
+  /** Stops the timer and adds the minutes worked to the task. */
+  const endTimer = (): void => {
+    if (!timer) return
+    const minutes = workedMinutes(timer.timer, Date.now())
+    const task = useStore.getState().tasks.find((t) => t.id === timer.taskId)
+    if (task && minutes > 0) updateTask(task.id, { spentMinutes: task.spentMinutes + minutes })
+    setTimer(null)
+  }
   const open = useMemo(() => tasks.filter((t) => !t.done), [tasks])
+  const fit = useMemo(() => filterByEffort(tasks, filter), [tasks, filter])
 
   // A task picked from elsewhere ("Lock in" in the task panel) jumps straight in, once.
   const [pinned, setPinned] = useState(focusTaskId)
@@ -44,7 +64,7 @@ export function LockInView() {
 
   const start = async (): Promise<void> => {
     setPhase({ kind: 'planning' })
-    const all = useStore.getState().tasks
+    const all = filterByEffort(useStore.getState().tasks, filter)
     const transport = ai === 'off' ? null : await getTransport()
     if (!transport) {
       setPhase({ kind: 'go', plan: localPlan(all, new Date()), index: 0 })
@@ -52,11 +72,11 @@ export function LockInView() {
     }
     try {
       const result = await transport.plan(buildContext(all, useStore.getState().areas, new Date()))
-      const latest = useStore.getState().tasks
+      const latest = filterByEffort(useStore.getState().tasks, filter)
       setPhase({ kind: 'go', plan: mergeAssistantPlan(result.order, result.summary, latest, new Date()), index: 0 })
     } catch (error) {
       showToast(`${assistantError(error)} Using your deadlines and priorities instead.`)
-      setPhase({ kind: 'go', plan: localPlan(useStore.getState().tasks, new Date()), index: 0 })
+      setPhase({ kind: 'go', plan: localPlan(filterByEffort(useStore.getState().tasks, filter), new Date()), index: 0 })
     }
   }
 
@@ -68,14 +88,30 @@ export function LockInView() {
         <p className="lockin__lede">
           {open.length === 0
             ? 'Nothing is open. Add a task on Today first.'
-            : 'Cairn looks at everything you have and gives you one small step. Just that one. The rest can wait.'}
+            : fit.length === 0
+              ? `Nothing ${filter === 'quick' ? 'quick' : 'big'} right now. That’s fine.`
+              : 'Cairn looks at everything you have and gives you one small step. Just that one. The rest can wait.'}
         </p>
         {open.length > 0 && (
+          <div className="seg lockin__filter" role="group" aria-label="What kind of task">
+            {FILTERS.map((f) => (
+              <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {open.length > 0 && fit.length === 0 && (
+          <button type="button" className="btn btn--lg" onClick={() => setFilter('any')}>
+            Show anything
+          </button>
+        )}
+        {fit.length > 0 && (
           <button type="button" className="btn btn--primary btn--lg lockin__go" onClick={() => void start()}>
             <Icon name="target" size={20} /> Lock in
           </button>
         )}
-        {open.length > 0 && ai !== 'off' && (
+        {fit.length > 0 && ai !== 'off' && (
           <p className="lockin__hint">
             <Icon name="sparkle" size={14} /> The assistant plans the order
           </p>
@@ -146,6 +182,9 @@ export function LockInView() {
           reason={plan.reasons[current.id] ?? null}
           summary={index === 0 ? plan.summary : null}
           fromAssistant={plan.source === 'assistant'}
+          timer={timer?.taskId === current.id ? timer.timer : null}
+          onTimer={(t) => setTimer({ taskId: current.id, timer: t })}
+          onEndTimer={endTimer}
           onFinished={() => setStones((n) => n + 1)}
           onTaskDone={advance}
           onSkip={advance}
@@ -166,13 +205,16 @@ interface NowCardProps {
   reason: string | null
   summary: string | null
   fromAssistant: boolean
+  timer: Timer | null
+  onTimer: (timer: Timer) => void
+  onEndTimer: () => void
   onFinished: () => void
   onTaskDone: () => void
   onSkip: () => void
 }
 
 /** The one thing: the next step big, the task it belongs to small, and why it's first. */
-function NowCard({ task, now, reason, summary, fromAssistant, onFinished, onTaskDone, onSkip }: NowCardProps) {
+function NowCard({ task, now, reason, summary, fromAssistant, timer, onTimer, onEndTimer, onFinished, onTaskDone, onSkip }: NowCardProps) {
   const area = useAreaMap().get(task.areaId)
   const updateStep = useStore((s) => s.updateStep)
   const addStep = useStore((s) => s.addStep)
@@ -195,6 +237,7 @@ function NowCard({ task, now, reason, summary, fromAssistant, onFinished, onTask
       return
     }
     if (step) updateStep(task.id, step.id, { done: true })
+    onEndTimer() // before setDone, so Undo of the finish stays valid
     setDone(task.id, true)
     onTaskDone()
   }
@@ -280,6 +323,8 @@ function NowCard({ task, now, reason, summary, fromAssistant, onFinished, onTask
         </form>
       )}
 
+      <FocusTimer timer={timer} onChange={onTimer} onEnd={onEndTimer} />
+
       <div className="now__actions">
         <button type="button" className="btn btn--primary btn--lg now__done" onClick={finish}>
           <Icon name="check" size={20} /> Done
@@ -289,7 +334,14 @@ function NowCard({ task, now, reason, summary, fromAssistant, onFinished, onTask
             <Icon name="sparkle" size={18} /> {breaking ? 'Breaking it down…' : 'Make it smaller'}
           </button>
         )}
-        <button type="button" className="btn btn--ghost btn--lg" onClick={onSkip}>
+        <button
+          type="button"
+          className="btn btn--ghost btn--lg"
+          onClick={() => {
+            onEndTimer()
+            onSkip()
+          }}
+        >
           <Icon name="skip" size={18} /> Not now
         </button>
       </div>

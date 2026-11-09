@@ -64,6 +64,30 @@ describe('tasks', () => {
   })
 })
 
+describe('v3 ADHD helpers', () => {
+  it('counts snoozes and keeps the count through undo', () => {
+    const id = state().addTask({ title: 'Stuck' }, 'life')
+    state().snoozeTask(id)
+    state().snoozeTask(id)
+    expect(state().tasks[0].snoozes).toBe(2)
+    state().undo()
+    expect(state().tasks[0].snoozes).toBe(1)
+  })
+
+  it('patchTasks changes several tasks as one undoable step', () => {
+    const a = state().addTask({ title: 'A' }, 'life')
+    const b = state().addTask({ title: 'B' }, 'life')
+    state().patchTasks([{ id: a, patch: { horizon: 'someday', due: null } }, { id: b, patch: { horizon: 'someday', due: null } }], 'Moved 2')
+    expect(state().tasks.every((t) => t.horizon === 'someday')).toBe(true)
+    state().undo()
+    expect(state().tasks.every((t) => t.horizon === 'week')).toBe(true)
+  })
+
+  it('defaults feedback prefs when missing', () => {
+    expect(sanitizePersisted({ prefs: { feedback: 'junk' } }).prefs.feedback).toEqual({ sound: false, haptics: true })
+  })
+})
+
 describe('bulk import', () => {
   it('adds many tasks at once and undoes them together', () => {
     state().addTask({ title: 'Existing' }, 'life')

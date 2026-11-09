@@ -1,4 +1,4 @@
-import { useCloud, useHashView, useInviteLink, useShortcuts, useStorageErrors, useTheme } from './appEffects'
+import { useCloud, useFinishFeedback, useHashView, useInviteLink, useShortcuts, useStorageErrors, useTheme } from './appEffects'
 import { useReminders } from './reminders/useReminders'
 import { AccountDialog } from './components/AccountDialog'
 import { LockInView } from './components/LockInView'
@@ -27,6 +27,7 @@ export default function App() {
   useShortcuts()
   useInviteLink()
   useStorageErrors()
+  useFinishFeedback()
   useCloud()
   useReminders()
 

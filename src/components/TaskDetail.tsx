@@ -263,6 +263,15 @@ function DetailBody({ task }: { task: Task }) {
         </div>
       )}
 
+      {!task.done && (task.snoozes ?? 0) >= 3 && (
+        <p className="detail__stuck">
+          Snoozed {task.snoozes} times.{' '}
+          <button type="button" className="detail__stuck-go" onClick={() => startFocus(task.id)}>
+            Make it smaller?
+          </button>
+        </p>
+      )}
+
       <div className="detail__actions">
         <button
           type="button"
