@@ -137,6 +137,12 @@ describe('areas', () => {
 })
 
 describe('sanitizePersisted', () => {
+  it('keeps task fields this version does not know about', () => {
+    const task = { id: 't1', title: 'x', areaId: DEFAULT_AREAS[0]!.id, createdAt: 1, updatedAt: 1, futureField: 'kept' }
+    const [kept] = sanitizePersisted({ tasks: [task] }).tasks
+    expect((kept as unknown as Record<string, unknown>).futureField).toBe('kept')
+  })
+
   it('falls back to defaults for garbage', () => {
     const result = sanitizePersisted('nonsense')
     expect(result.areas).toHaveLength(DEFAULT_AREAS.length)

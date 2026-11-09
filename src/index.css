@@ -170,11 +170,6 @@ button:disabled {
   transition-duration: 0.06s;
 }
 
-.btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .btn--primary {
   background: var(--action);
   color: var(--on-action);
@@ -246,17 +241,12 @@ button:disabled {
   color: var(--ink);
 }
 
-.icon-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 /* ---------- Inputs ---------- */
 .field {
   width: 100%;
   min-height: 42px;
   padding: 9px 12px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-s);
   background: var(--surface);
   outline: none;
@@ -264,7 +254,7 @@ button:disabled {
 }
 
 .field:hover {
-  border-color: var(--line-strong);
+  border-color: var(--ink-3);
 }
 
 .field:focus {
@@ -347,11 +337,6 @@ select.field {
   }
 }
 
-.check:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .check--square {
   border-radius: 6px;
   width: 20px;
@@ -379,6 +364,7 @@ select.field {
   flex-wrap: wrap;
   gap: 2px;
   padding: 3px;
+  border: 1px solid var(--field-border);
   border-radius: 999px;
   background: var(--sunken);
 }
@@ -405,11 +391,6 @@ select.field {
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
-}
-
-.seg button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
 }
 
 /* Chips (pills) */
@@ -443,11 +424,6 @@ button.chip[aria-pressed='true'] {
   background: var(--primary-soft);
   color: var(--primary-soft-ink);
   font-weight: 600;
-}
-
-button.chip:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
 }
 
 .tag {

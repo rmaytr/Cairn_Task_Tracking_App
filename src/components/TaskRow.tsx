@@ -30,6 +30,8 @@ export interface RowReorder {
   onHandleDown: (e: PointerEvent) => void
   onPressDown: (e: PointerEvent) => void
   onMove: (delta: -1 | 1) => void
+  /** Whether a step up or down exists, for the menu items. */
+  canMove: { up: boolean; down: boolean }
 }
 
 
@@ -65,7 +67,7 @@ export function TaskRow({ task, now, blockedBy, reorder }: TaskRowProps) {
       layout={!reduce && reorder?.state !== 'lifted'}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, height: 0, x: reduce ? 0 : 24, transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] } }}
+      exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, height: 0, x: 24, transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] } }}
       transition={{ duration: 0.18 }}
       className={`trow${task.done ? ' is-done' : ''}${selected ? ' is-selected' : ''}${isStale(task, now) ? ' is-stale' : ''}${menu.anchor ? ' has-menu' : ''}`}
       style={areaStyle(area)}
@@ -141,6 +143,7 @@ export function TaskRow({ task, now, blockedBy, reorder }: TaskRowProps) {
           data-task-id={task.id}
           onClick={() => select(task.id)}
           aria-keyshortcuts={reorder ? 'Alt+ArrowUp Alt+ArrowDown' : undefined}
+          aria-describedby={reorder ? `reorder-hint-${task.id}` : undefined}
         >
           <span className="trow__title">{task.title}</span>
           {(sorting || blockedBy || task.waiting) && (
@@ -163,6 +166,11 @@ export function TaskRow({ task, now, blockedBy, reorder }: TaskRowProps) {
             </span>
           )}
         </button>
+        {reorder && (
+          <span id={`reorder-hint-${task.id}`} className="visually-hidden">
+            Press Alt with the up or down arrow to move this task.
+          </span>
+        )}
         <span className="trow__side">
           <PriorityMark task={task} />
           {task.due && <DuePill due={task.due} now={now} />}
@@ -196,7 +204,16 @@ export function TaskRow({ task, now, blockedBy, reorder }: TaskRowProps) {
       </div>
       </motion.div>
       </div>
-      <TaskMenu task={task} anchor={menu.anchor} onClose={menu.close} />
+      <TaskMenu
+        task={task}
+        anchor={menu.anchor}
+        onClose={menu.close}
+        move={
+          reorder && !task.done
+            ? { up: reorder.canMove.up ? () => reorder.onMove(-1) : undefined, down: reorder.canMove.down ? () => reorder.onMove(1) : undefined }
+            : undefined
+        }
+      />
       {open && (
         <div className="trow__steps-body">
           <StepList task={task} compact />

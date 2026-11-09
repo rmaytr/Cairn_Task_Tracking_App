@@ -56,6 +56,35 @@
   opacity: 1;
 }
 
+/* Single-pointer alternative to dragging (WCAG 2.5.7): shown on hover/focus, always on touch. */
+.steps__move {
+  display: flex;
+  flex: none;
+  opacity: 0;
+}
+
+.steps__item:hover .steps__move,
+.steps__item:focus-within .steps__move {
+  opacity: 1;
+}
+
+.steps__nudge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.steps__nudge:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
 .steps__add {
   display: flex;
   align-items: center;
@@ -86,6 +115,10 @@
 @media (hover: none) {
   .steps__del {
     opacity: 0.6;
+  }
+
+  .steps__move {
+    opacity: 0.75;
   }
 }
 

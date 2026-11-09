@@ -166,6 +166,7 @@ export function ListView({ areaId, filters }: { areaId: string | null; filters: 
 
   const renderRows = (group: Group): ReactNode[] => {
     const reorderable = canReorder && group.droppable
+    const open = openIds(group)
     const rows: ReactNode[] = group.items.map(({ task, blockedBy }) => (
       <TaskRow
         key={task.id}
@@ -180,6 +181,7 @@ export function ListView({ areaId, filters }: { areaId: string | null; filters: 
                 onHandleDown: (e) => drag.onHandleDown(e, task.id, group.key),
                 onPressDown: (e) => drag.onPressDown(e, task.id, group.key),
                 onMove: (delta) => moveByKey(group, task.id, delta),
+                canMove: { up: open.indexOf(task.id) > 0, down: open.indexOf(task.id) < open.length - 1 },
               }
             : undefined
         }

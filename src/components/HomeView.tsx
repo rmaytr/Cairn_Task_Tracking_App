@@ -25,6 +25,11 @@ const WEEK_MS = 7 * 86_400_000
 const DONE_VISIBLE = 6
 const FRESH_START_MIN = 2
 
+const HEADING_ID = 'home-heading'
+
+/** Where focus goes when the control that had it disappears; the toast says what happened. */
+const focusHeading = (): void => document.getElementById(HEADING_ID)?.focus()
+
 function greeting(now: Date): string {
   const h = now.getHours()
   if (h < 5) return 'Still up?'
@@ -103,7 +108,7 @@ export function HomeView() {
   return (
     <div className="home">
       <header className="home__head">
-        <h1 className="home__hello display">{greeting(now).replace(/[^?]$/, '$&.')}</h1>
+        <h1 id={HEADING_ID} tabIndex={-1} className="home__hello display">{greeting(now).replace(/[^?]$/, '$&.')}</h1>
         <p className="home__finding">
           <span className="home__date">{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
           {' '}
@@ -230,6 +235,11 @@ function FreshStart({ tasks, now }: { tasks: Task[]; now: Date }) {
   if (dismissed) return null
   const n = tasks.length
   const things = `${n} ${n === 1 ? 'thing' : 'things'}`
+  // The card disappears with the action, taking focus with it.
+  const act = (run: () => void) => (): void => {
+    run()
+    focusHeading()
+  }
   return (
     <section className="panel home__reset home__fresh" aria-labelledby="fresh-h">
       <div>
@@ -237,16 +247,16 @@ function FreshStart({ tasks, now }: { tasks: Task[]; now: Date }) {
         <p>Pick a fresh start. Nothing is lost, and you can undo it.</p>
       </div>
       <div className="home__fresh-actions">
-        <button type="button" className="btn btn--primary" onClick={() => patchTasks(moveAllToToday(tasks, now), `Moved ${things} to today`)}>
+        <button type="button" className="btn btn--primary" onClick={act(() => patchTasks(moveAllToToday(tasks, now), `Moved ${things} to today`))}>
           <Icon name="move" size={16} /> Move all to today
         </button>
-        <button type="button" className="btn" onClick={() => patchTasks(spreadOverWeek(tasks, now), `Spread ${things} over this week`)}>
+        <button type="button" className="btn" onClick={act(() => patchTasks(spreadOverWeek(tasks, now), `Spread ${things} over this week`))}>
           <Icon name="calendar" size={16} /> Spread over this week
         </button>
-        <button type="button" className="btn btn--ghost" onClick={() => patchTasks(notNow(tasks), `Moved ${things} to Someday`)}>
+        <button type="button" className="btn btn--ghost" onClick={act(() => patchTasks(notNow(tasks), `Moved ${things} to Someday`))}>
           Not now
         </button>
-        <button type="button" className="icon-btn" onClick={() => setDismissed(true)} aria-label="Hide for now" title="Hide for now">
+        <button type="button" className="icon-btn" onClick={act(() => setDismissed(true))} aria-label="Hide for now" title="Hide for now">
           <Icon name="close" size={16} />
         </button>
       </div>
@@ -265,10 +275,25 @@ function DoneToday({ tasks }: { tasks: Task[] }) {
         Done today <span className="num home__count">{tasks.length}</span>
       </h2>
       <ul className="home__done-list">
-        {shown.map((t) => (
-          <li key={t.id}>
+        {shown.map((t, i) => (
+          <li key={t.id} data-done-id={t.id}>
             <label>
-              <input type="checkbox" className="check" checked onChange={() => setDone(t.id, false)} aria-label={`Mark not done: ${t.title}`} />
+              <input
+                type="checkbox"
+                className="check"
+                checked
+                onChange={() => {
+                  const neighbour = (shown[i + 1] ?? shown[i - 1])?.id
+                  setDone(t.id, false)
+                  // The item leaves this list: land on its neighbour, or the heading if it was the last.
+                  requestAnimationFrame(() => {
+                    const input = neighbour && document.querySelector<HTMLInputElement>(`[data-done-id="${CSS.escape(neighbour)}"] input`)
+                    if (input) input.focus()
+                    else focusHeading()
+                  })
+                }}
+                aria-label={`Mark not done: ${t.title}`}
+              />
               <span>{t.title}</span>
             </label>
           </li>

@@ -10,12 +10,14 @@ interface TaskMenuProps {
   task: Task
   anchor: MenuAnchor | null
   onClose: () => void
+  /** Rows in a reorderable list: move one place (a button alternative to dragging). A missing callback hides the item. */
+  move?: { up?: () => void; down?: () => void }
 }
 
 const short = (iso: string): string => fromISODate(iso).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 
 /** Quick actions on a task without opening it: when, priority, Lock in, area, delete. */
-export function TaskMenu({ task, anchor, onClose }: TaskMenuProps) {
+export function TaskMenu({ task, anchor, onClose, move }: TaskMenuProps) {
   const areas = useStore((s) => s.areas)
   const updateTask = useStore((s) => s.updateTask)
   const moveTask = useStore((s) => s.moveTask)
@@ -88,6 +90,16 @@ export function TaskMenu({ task, anchor, onClose }: TaskMenuProps) {
           {!task.done && (
             <MenuItem icon="target" onSelect={run(() => startFocus(task.id))}>
               Lock in on this
+            </MenuItem>
+          )}
+          {move?.up && (
+            <MenuItem icon="arrowUp" onSelect={run(move.up)}>
+              Move up
+            </MenuItem>
+          )}
+          {move?.down && (
+            <MenuItem icon="arrowDown" onSelect={run(move.down)}>
+              Move down
             </MenuItem>
           )}
           <MenuItem icon="move" onSelect={() => setMoving(true)}>
