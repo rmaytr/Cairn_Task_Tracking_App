@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { FakeContext, gains, sources } from './fakeAudio'
+import { contexts, FakeContext, gains, sources } from './fakeAudio'
 
 type Engine = typeof import('../noise')
 
@@ -7,6 +7,7 @@ async function load(withAudio: boolean): Promise<Engine> {
   vi.resetModules()
   sources.length = 0
   gains.length = 0
+  contexts.length = 0
   if (withAudio) vi.stubGlobal('AudioContext', FakeContext)
   return import('../noise')
 }
@@ -94,6 +95,34 @@ describe('with Web Audio', () => {
     vi.advanceTimersByTime(15 * 60_000)
     expect(e.isPlaying()).toBe(false)
     expect(e.getSoundState().stopAt).toBeNull()
+  })
+
+  it('says it is silent when the new sound fails during a crossfade', () => {
+    e.play('pink')
+    const spy = vi.spyOn(FakeContext.prototype, 'createBufferSource').mockImplementation(() => {
+      throw new Error('blocked')
+    })
+    e.setKind('rain')
+    spy.mockRestore()
+    expect(e.isPlaying()).toBe(false)
+    expect(e.getSoundState().stopAt).toBeNull()
+  })
+
+  it('suspends the context after the stop fade, and resumes it (also from iOS "interrupted") on play', async () => {
+    vi.useFakeTimers()
+    e.play('pink')
+    const ac = contexts[0]!
+    e.stop()
+    vi.advanceTimersByTime(1000)
+    expect(ac.state).toBe('suspended')
+    e.play('pink')
+    expect(ac.state).toBe('running')
+    e.stop()
+    ac.state = 'interrupted'
+    e.play('pink')
+    expect(ac.resumes).toBe(2)
+    vi.advanceTimersByTime(1000)
+    expect(ac.state).toBe('running') // playing again: the pending suspend is cancelled
   })
 
   it('a blocked context leaves it silent instead of throwing', async () => {

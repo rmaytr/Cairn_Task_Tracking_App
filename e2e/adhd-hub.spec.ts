@@ -55,6 +55,17 @@ test.describe('ADHD toolkit hub', () => {
     }
   })
 
+  test('a corrected link replaces itself, so Back skips it', async ({ page }) => {
+    await startEmpty(page)
+    await expect(page).toHaveURL(/#home$/)
+    await page.evaluate(() => {
+      location.hash = '#adhd/bogus'
+    })
+    await expect(page).toHaveURL(/#adhd$/)
+    await page.goBack()
+    await expect(page).toHaveURL(/#home$/)
+  })
+
   test('fits a phone screen without sideways scrolling', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 })
     await startEmpty(page)

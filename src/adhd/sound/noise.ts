@@ -33,6 +33,7 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let voice: Voice | null = null
 let timer: ReturnType<typeof setTimeout> | undefined
+let idle: ReturnType<typeof setTimeout> | undefined
 const buffers = new Map<NoiseKind, AudioBuffer>()
 const listeners = new Set<() => void>()
 
@@ -52,7 +53,9 @@ function audio(): AudioContext | null {
     master.gain.value = volumeToGain(volume)
     master.connect(ctx.destination)
   }
-  if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined)
+  clearTimeout(idle)
+  // iOS reports 'interrupted' after a call or Siri; it needs a resume just like 'suspended'.
+  if (ctx.state !== 'running') void ctx.resume().catch(() => undefined)
   return ctx
 }
 
@@ -110,7 +113,9 @@ export function play(kind: NoiseKind = state.kind): void {
     fadeOutVoice(ac)
     startVoice(ac, master, kind)
   } catch {
-    return // Blocked or unsupported: stay silent and say so through isPlaying().
+    // Blocked or unsupported: stay silent and say so through isPlaying() (the old sound is fading).
+    if (state.playing) stop()
+    return
   }
   update({ playing: true, kind, stopAt: state.playing ? state.stopAt : schedule() })
 }
@@ -124,6 +129,19 @@ export function stop(): void {
     voice = null
   }
   if (state.playing || state.stopAt !== null) update({ playing: false, stopAt: null })
+  // Nothing plays after the fade: suspend the context so it stops using the battery.
+  clearTimeout(idle)
+  idle = setTimeout(() => {
+    if (state.playing || ctx?.state !== 'running') return
+    try {
+      void ctx
+        .suspend()
+        .then(() => (state.playing ? ctx?.resume() : undefined))
+        .catch(() => undefined)
+    } catch {
+      // Best effort, like volume.
+    }
+  }, (FADE_SECONDS + 0.1) * 1000)
 }
 
 /** Picks the sound; crossfades if something is playing. */

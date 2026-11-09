@@ -12,6 +12,8 @@ import { useStore } from '../../store/useStore'
 import { currentSound } from '../sound/noise'
 
 const MIN = 60_000
+/** Session titles are capped like the schema caps them. */
+const MAX_TITLE = 200
 
 export interface Parked {
   id: string
@@ -32,6 +34,8 @@ export interface Block {
   rampDismissed: boolean
   /** The last "N min left" notice already given (so a remount doesn't repeat it). */
   nudged: number | null
+  /** Started in the room (not picked up from a Lock in timer), so it is logged even if ended elsewhere. */
+  fromRoom: boolean
 }
 
 export interface Ended {
@@ -68,6 +72,7 @@ export function beginBlock(taskId: string, minutes: number, guessMin: number | n
     parked: [],
     rampDismissed: false,
     nudged: null,
+    fromRoom: true,
   }
   useRoom.setState({ block, ended: null })
 }
@@ -88,6 +93,7 @@ export function ensureBlock(now = Date.now()): Block | null {
     parked: [],
     rampDismissed: false,
     nudged: null,
+    fromRoom: false,
   }
   useRoom.setState({ block })
   return block
@@ -111,31 +117,40 @@ export function parkThought(text: string): string | null {
   return id
 }
 
+type Running = NonNullable<ReturnType<typeof useStore.getState>['focusTimer']>
+
+/** Logs a block of a minute or more (rating null) and returns its session id. */
+function logBlock(running: Running, block: Block | null, title: string, now: number): string | null {
+  const { prefs, logSession } = useStore.getState()
+  const minutes = workedMinutes(running.timer, now)
+  if (minutes < 1) return null
+  return logSession({
+    taskId: running.taskId,
+    title: title.slice(0, MAX_TITLE),
+    at: block?.at ?? now - minutes * MIN,
+    guessMin: block?.guessMin ?? null,
+    actualMin: minutes,
+    sound: currentSound(),
+    companion: prefs.adhd.companion,
+    rating: null,
+  })
+}
+
 /**
  * Ends the block: logs it (worked minutes read before the timer is cleared), then ends the
  * store timer once, which credits the task's spent minutes. Blocks under a minute aren't logged.
  */
 export function finishBlock(options: { moveFirst?: boolean } = {}, now = Date.now()): void {
-  const { focusTimer, tasks, prefs, logSession, endFocusTimer } = useStore.getState()
+  const { focusTimer, tasks, endFocusTimer } = useStore.getState()
   if (!focusTimer) return
   const block = ensureBlock(now)
   const task = tasks.find((t) => t.id === focusTimer.taskId)
   const title = task?.title ?? 'your task'
   const minutes = workedMinutes(focusTimer.timer, now)
   const guessMin = block?.guessMin ?? null
-  const sessionId =
-    minutes >= 1
-      ? logSession({
-          taskId: focusTimer.taskId,
-          title,
-          at: block?.at ?? now - minutes * MIN,
-          guessMin,
-          actualMin: minutes,
-          sound: currentSound(),
-          companion: prefs.adhd.companion,
-          rating: null,
-        })
-      : null
+  const sessionId = logBlock(focusTimer, block, title, now)
+  // Clear the block first so the timer-ended listener below doesn't log it a second time.
+  useRoom.setState({ block: null })
   endFocusTimer(now)
   const stepsDone = Math.max(0, doneSteps(task) - (block?.stepsDone ?? doneSteps(task)))
   useRoom.setState({
@@ -143,3 +158,15 @@ export function finishBlock(options: { moveFirst?: boolean } = {}, now = Date.no
     ended: { taskId: focusTimer.taskId, title, minutes, guessMin, stepsDone, sessionId, moveFirst: Boolean(options.moveFirst) },
   })
 }
+
+// A timer ended anywhere else (Lock in, the timer bar, completing or deleting the task) ends the
+// block too, so a later block on the same task doesn't reuse its guess, start or parked list.
+// A block started here still gets logged; a deleted (or wiped) task's doesn't.
+useStore.subscribe((s, prev) => {
+  if (!prev.focusTimer || s.focusTimer) return
+  const block = useRoom.getState().block
+  if (!block) return
+  useRoom.setState({ block: null })
+  const task = s.tasks.find((t) => t.id === prev.focusTimer?.taskId)
+  if (block.fromRoom && block.taskId === prev.focusTimer.taskId && task) logBlock(prev.focusTimer, block, task.title, Date.now())
+})

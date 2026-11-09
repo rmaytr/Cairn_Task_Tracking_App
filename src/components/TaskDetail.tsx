@@ -254,7 +254,12 @@ function DetailBody({ task }: { task: Task }) {
             placeholder="When ___, I will ___ (e.g. after lunch, I'll open the doc)"
             aria-label="If-then plan"
             autoFocus={showPlan && task.plan === null}
-            onChange={(e) => updateTask(task.id, { plan: e.target.value || null })}
+            // Keep the field mounted while it is being edited, even once it's cleared.
+            onFocus={() => setShowPlan(true)}
+            onChange={(e) => {
+              setShowPlan(true)
+              updateTask(task.id, { plan: e.target.value || null })
+            }}
             maxLength={300}
           />
           <button

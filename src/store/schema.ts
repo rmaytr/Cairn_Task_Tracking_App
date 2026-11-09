@@ -3,7 +3,7 @@ import { DEFAULT_AREAS } from '../model/defaults'
 import { AREA_COLORS, HORIZONS, REPEATS, type Area, type Task, type Tombstone } from '../model/types'
 import { openProxy } from '../assist/config'
 import { TEXT_SIZES, THEME_PREFS } from '../model/themes'
-import { DEFAULT_ADHD, MAX_SESSIONS, MAX_TREAT_LENGTH, MAX_TREATS, NOISE_KINDS, PLAYBOOK_MARKS, type FocusSession } from '../adhd/types'
+import { DEFAULT_ADHD, MAX_SESSIONS, MAX_TREAT_LENGTH, MAX_TREATS, NOISE_KINDS, PLAYBOOK_MARKS, type FocusSession, type PlaybookMark } from '../adhd/types'
 
 /** Themes used to be just light/dark; those map to Stone and Night. */
 const LEGACY_THEMES: Record<string, string> = { light: 'stone', dark: 'night' }
@@ -52,7 +52,7 @@ export const tombstoneSchema = z.object({ id: z.string(), kind: z.enum(['task', 
 export const focusSessionSchema = z.object({
   id: z.string().max(64),
   taskId: z.string().max(64).nullable().catch(null),
-  title: z.string().max(200).catch(''),
+  title: z.string().catch('').transform((t) => t.slice(0, 200)),
   at: z.number(),
   guessMin: z.number().min(1).max(600).nullable().catch(null),
   actualMin: z.number().min(0).max(1440),
@@ -78,10 +78,21 @@ export const adhdSchema = z
         }).slice(-MAX_SESSIONS),
       ),
     treats: z
-      .array(z.string())
+      .array(z.unknown())
       .catch([...DEFAULT_ADHD.treats])
-      .transform((list) => list.map((t) => t.trim().slice(0, MAX_TREAT_LENGTH)).filter(Boolean).slice(0, MAX_TREATS)),
-    playbook: z.record(z.string().max(64), z.enum(PLAYBOOK_MARKS)).catch({}),
+      .transform((list) =>
+        list.flatMap((t) => (typeof t === 'string' ? [t.trim().slice(0, MAX_TREAT_LENGTH)] : [])).filter(Boolean).slice(0, MAX_TREATS),
+      ),
+    playbook: z
+      .record(z.string(), z.unknown())
+      .catch({})
+      .transform((marks) =>
+        Object.fromEntries(
+          Object.entries(marks).filter(
+            (entry): entry is [string, PlaybookMark] => entry[0].length <= 64 && (PLAYBOOK_MARKS as readonly unknown[]).includes(entry[1]),
+          ),
+        ),
+      ),
   })
   .catch(DEFAULT_ADHD)
 

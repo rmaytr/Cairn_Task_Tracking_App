@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { useNow } from '../hooks'
-import { localPlan } from '../plan/lockin'
 import { useStore } from '../store/useStore'
 import { BLOCKERS, BLOCKER_LABEL, MOVE_FOR, type Blocker } from './unstuck/blockers'
 import { BeKind, IfThen, LessBoring, PickOne, SmallThings, TinyStep, WhyLine } from './unstuck/StuckMoves'
 import './unstuck/unstuck.css'
+import { upNext } from './upNext'
 
 const MOVE_TITLE: Record<Blocker, string> = {
   big: 'Make the first step tiny',
@@ -27,11 +27,7 @@ export function Unstuck() {
   const heading = useRef<HTMLHeadingElement>(null)
   const firstRender = useRef(true)
 
-  const ordered = useMemo(() => {
-    const open = tasks.filter((t) => !t.done)
-    const ids = localPlan(open, now).ids
-    return ids.map((id) => open.find((t) => t.id === id)).filter((t) => t !== undefined)
-  }, [tasks, now])
+  const { ordered } = useMemo(() => upNext(tasks, now), [tasks, now])
   const task = ordered.find((t) => t.id === taskId) ?? ordered[0]
 
   // Move focus to the new step's heading so keyboard and screen-reader users land on it.
@@ -54,7 +50,7 @@ export function Unstuck() {
 
   return (
     <div className="stuck">
-      <p className="stuck__steps" aria-hidden="true">
+      <p className="stuck__steps" aria-live="polite">
         Step {step} of 3
       </p>
       {step > 1 || choosing ? (

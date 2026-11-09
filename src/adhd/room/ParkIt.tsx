@@ -4,7 +4,8 @@ import { parkThought, type Parked } from './block'
 
 /**
  * "Park it": write down a thought that pops up and keep going. It becomes a task for Later.
- * Writing a plan for an open loop quiets it (Masicampo & Baumeister, 2011).
+ * Loosely inspired by Masicampo & Baumeister (2011), where making a specific plan for an unfinished
+ * goal reduced intrusive thoughts. Parking a thought is not a plan, so the copy claims no effect.
  */
 export function ParkIt({ parked }: { parked: readonly Parked[] }) {
   const [text, setText] = useState('')
@@ -15,7 +16,7 @@ export function ParkIt({ parked }: { parked: readonly Parked[] }) {
       <h2 className="room-panel__title" id="park-h">
         Park it
       </h2>
-      <p className="room-panel__hint">Something popped into your head? Write it here and get back to it. It goes to Later.</p>
+      <p className="room-panel__hint">Something popped into your head? Write it here so you can let it go for now. It goes to Later.</p>
       <form
         className="room-park__form"
         onSubmit={(e) => {

@@ -54,4 +54,49 @@ describe('Focus room block', () => {
     expect(useRoom.getState().block?.parked).toEqual([{ id: parked, title: 'email the professor' }])
     expect(parkThought('   ')).toBeNull()
   })
+
+  it('drops the block when the timer ends elsewhere, so a later block starts fresh', () => {
+    const id = state().addTask({ title: 'Essay' }, 'classes')
+    beginBlock(id, 10, 7, T0)
+    parkThought('email the professor')
+    state().endFocusTimer(T0 + 2 * MIN)
+    expect(useRoom.getState().block).toBeNull()
+
+    state().startFocusTimer(id, 25, T0 + 60 * MIN)
+    expect(ensureBlock(T0 + 61 * MIN)).toMatchObject({ guessMin: null, startMin: 25, at: T0 + 60 * MIN, parked: [] })
+  })
+
+  it('still logs a room block ended elsewhere, once, unrated', () => {
+    const id = state().addTask({ title: 'Essay' }, 'classes')
+    beginBlock(id, 10, 8, Date.now() - 5 * MIN)
+    state().setDone(id, true)
+    expect(state().focusTimer).toBeNull()
+    expect(state().prefs.adhd.sessions).toEqual([expect.objectContaining({ taskId: id, guessMin: 8, actualMin: 5, rating: null })])
+  })
+
+  it('does not log a block only picked up from a Lock in timer, or one whose task was deleted', () => {
+    const lockIn = state().addTask({ title: 'Essay' }, 'classes')
+    state().startFocusTimer(lockIn, 25, Date.now() - 5 * MIN)
+    ensureBlock()
+    state().endFocusTimer()
+    const gone = state().addTask({ title: 'Gone' }, 'classes')
+    beginBlock(gone, 10, null, Date.now() - 5 * MIN)
+    state().deleteTask(gone)
+    useStore.setState({ focusTimer: null })
+    expect(state().prefs.adhd.sessions).toHaveLength(0)
+  })
+
+  it('finishBlock logs a block exactly once', () => {
+    const id = state().addTask({ title: 'Essay' }, 'classes')
+    beginBlock(id, 10, null, T0)
+    finishBlock({}, T0 + 4 * MIN)
+    expect(state().prefs.adhd.sessions).toHaveLength(1)
+  })
+
+  it('caps a long title at 200 characters', () => {
+    const id = state().addTask({ title: 'x'.repeat(300) }, 'classes')
+    beginBlock(id, 10, null, T0)
+    finishBlock({}, T0 + 4 * MIN)
+    expect(state().prefs.adhd.sessions[0]!.title).toHaveLength(200)
+  })
 })

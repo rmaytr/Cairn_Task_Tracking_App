@@ -23,8 +23,11 @@ export class FakeSource extends FakeNode {
 }
 export const sources: FakeSource[] = []
 export const gains: FakeNode[] = []
+export const contexts: FakeContext[] = []
 export class FakeContext {
   state = 'running'
+  resumes = 0
+  constructor() { contexts.push(this) }
   sampleRate = 8000
   currentTime = 0
   destination = new FakeNode()
@@ -34,5 +37,6 @@ export class FakeContext {
     const data = Array.from({ length: channels }, () => new Float32Array(length))
     return { getChannelData: (ch: number) => data[ch] }
   }
-  resume(): Promise<void> { return Promise.resolve() }
+  resume(): Promise<void> { this.resumes++; this.state = 'running'; return Promise.resolve() }
+  suspend(): Promise<void> { this.state = 'suspended'; return Promise.resolve() }
 }
