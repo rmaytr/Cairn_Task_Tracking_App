@@ -78,6 +78,8 @@ export interface Task {
   repeatAnchor?: string
   /** Ids of tasks that should be finished before this one ("do after"). */
   after?: string[]
+  /** Place in "My order" (lower first). Unranked tasks follow in planner order. */
+  rank?: number
 }
 
 export type Priority = 'high' | 'normal' | 'low'

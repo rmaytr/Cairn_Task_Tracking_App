@@ -8,7 +8,7 @@ describe('parseSyncDoc', () => {
   it('round-trips a valid document, keeping area.updatedAt and task.repeat', () => {
     const doc = makeDoc({
       areas: [makeArea('a1', { updatedAt: 55 })],
-      tasks: [makeTask('t1', { repeat: 'weekly' })],
+      tasks: [makeTask('t1', { repeat: 'weekly', rank: 1536 })],
       tombstones: [{ id: 'x', kind: 'task', at: 9 }],
     })
     expect(parseSyncDoc(JSON.parse(JSON.stringify(doc)))).toEqual(doc)

@@ -1,4 +1,6 @@
+/* Positioned: drag hit-testing measures rows by their offsets inside the list. */
 .list {
+  position: relative;
   display: grid;
   gap: 28px;
   width: min(860px, 100%);

@@ -1,5 +1,5 @@
 import { animate, motion, useMotionValue, type PanInfo } from 'motion/react'
-import { useRef, useState, type MouseEvent } from 'react'
+import { useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { TASK_DRAG_TYPE } from '../lib/drag'
 import { extractLinks } from '../lib/links'
 import { areaStyle, useAreaMap, useMediaQuery, useReducedMotion } from '../hooks'
@@ -11,6 +11,7 @@ import { Icon } from './Icon'
 import { StepList } from './StepList'
 import { TaskMenu, TaskMenuButton } from './TaskMenu'
 import { useMenu } from './useMenu'
+import { moveKeyDelta, type DragState } from './useReorderDrag'
 import './TaskRow.css'
 
 interface TaskRowProps {
@@ -18,7 +19,19 @@ interface TaskRowProps {
   now: Date
   /** Name of an open task this one waits for. */
   blockedBy?: string
+  /** Lists that support "My order" pass this: a grip, touch long-press and Alt+Up/Down. */
+  reorder?: RowReorder
 }
+
+export interface RowReorder {
+  /** `data-*` attributes from useReorderDrag's itemProps. */
+  attrs: Record<string, string | undefined>
+  state?: DragState
+  onHandleDown: (e: PointerEvent) => void
+  onPressDown: (e: PointerEvent) => void
+  onMove: (delta: -1 | 1) => void
+}
+
 
 /** A flag for high priority; normal and low stay unmarked to keep rows quiet. */
 export function PriorityMark({ task }: { task: Pick<Task, 'high' | 'low'> }) {
@@ -32,7 +45,7 @@ export function PriorityMark({ task }: { task: Pick<Task, 'high' | 'low'> }) {
 }
 
 /** One task in a list: check it off, open it, peek at its steps. Calm by default. */
-export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
+export function TaskRow({ task, now, blockedBy, reorder }: TaskRowProps) {
   const [open, setOpen] = useState(false)
   const setDone = useStore((s) => s.setDone)
   const select = useStore((s) => s.select)
@@ -44,17 +57,24 @@ export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
   const link = extractLinks(`${task.title}\n${task.notes}`)[0]
   const menu = useMenu()
   const dotsRef = useRef<HTMLButtonElement>(null)
-  const { enabled: swipeable, x: swipeX, ref: swipeRef, armed, onPointerDownCapture, onDragStart, onDrag, onDragEnd, onClickCapture } = useSwipe(task)
+  const { enabled: swipeable, x: swipeX, ref: swipeRef, armed, onPointerDownCapture, onDragStart, onDrag, onDragEnd, onClickCapture } = useSwipe(task, Boolean(reorder?.state))
 
   return (
     <motion.li
-      layout={!reduce}
+      {...reorder?.attrs}
+      layout={!reduce && reorder?.state !== 'lifted'}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, height: 0, x: reduce ? 0 : 24, transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] } }}
       transition={{ duration: 0.18 }}
       className={`trow${task.done ? ' is-done' : ''}${selected ? ' is-selected' : ''}${isStale(task, now) ? ' is-stale' : ''}${menu.anchor ? ' has-menu' : ''}`}
       style={areaStyle(area)}
+      onKeyDown={(e) => {
+        const delta = reorder && moveKeyDelta(e)
+        if (!delta) return
+        e.preventDefault()
+        reorder.onMove(delta)
+      }}
     >
       <div className={`trow__track${armed ? ` is-armed-${armed}` : ''}`}>
       {swipeable && (
@@ -77,6 +97,7 @@ export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
         dragElastic={0.9}
         dragMomentum={false}
         onPointerDownCapture={onPointerDownCapture}
+        onPointerDown={reorder?.onPressDown}
         onDragStart={onDragStart}
         onDrag={onDrag}
         onDragEnd={onDragEnd}
@@ -85,8 +106,13 @@ export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
       <div
         className="trow__main"
         // Drag a row onto an area (or Today) in the sidebar to move it there (mouse only; touch swipes).
-        draggable={!task.done && !swipeable}
+        draggable={!task.done && !swipeable && !reorder?.state}
         onDragStart={(e) => {
+          // The grip reorders with pointer events; the rest of the row drags to the sidebar.
+          if (reorder?.state) {
+            e.preventDefault()
+            return
+          }
           e.dataTransfer.setData(TASK_DRAG_TYPE, task.id)
           e.dataTransfer.setData('text/plain', task.title)
           e.dataTransfer.effectAllowed = 'move'
@@ -97,6 +123,11 @@ export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
           menu.openAt(e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : { el: dotsRef.current })
         }}
       >
+        {reorder && (
+          <span className="trow__grip" aria-hidden="true" title="Drag to reorder (Alt+Up/Down)" onPointerDownCapture={reorder.onHandleDown}>
+            <Icon name="grip" size={16} />
+          </span>
+        )}
         <input
           type="checkbox"
           className="check"
@@ -104,7 +135,13 @@ export function TaskRow({ task, now, blockedBy }: TaskRowProps) {
           onChange={(e) => setDone(task.id, e.target.checked)}
           aria-label={`Done: ${task.title}`}
         />
-        <button type="button" className="trow__body" data-task-id={task.id} onClick={() => select(task.id)}>
+        <button
+          type="button"
+          className="trow__body"
+          data-task-id={task.id}
+          onClick={() => select(task.id)}
+          aria-keyshortcuts={reorder ? 'Alt+ArrowUp Alt+ArrowDown' : undefined}
+        >
           <span className="trow__title">{task.title}</span>
           {(sorting || blockedBy || task.waiting) && (
             <span className="trow__meta">
@@ -176,7 +213,7 @@ type Armed = 'done' | 'snooze' | null
  * "armed" (the backdrop pops and the phone ticks); letting go there runs it, anywhere else
  * springs the row back. Mouse users keep drag-to-area and the ⋯ menu instead.
  */
-function useSwipe(task: Task) {
+function useSwipe(task: Task, reordering: boolean) {
   const touch = useMediaQuery('(pointer: coarse)')
   const reduce = useReducedMotion()
   const setDone = useStore((s) => s.setDone)
@@ -186,11 +223,13 @@ function useSwipe(task: Task) {
   const [armed, setArmed] = useState<Armed>(null)
   // A swipe that ends where it started must not also count as a tap that opens the task.
   const swiped = useRef(false)
-  const enabled = touch && !task.done
+  // A long-press that picked the row up for reordering turns the swipe off mid-gesture.
+  const enabled = touch && !task.done && !reordering
 
   const threshold = (): number => Math.min(110, (ref.current?.offsetWidth ?? 320) * 0.32)
 
   const onDrag = (_: unknown, info: PanInfo): void => {
+    if (reordering) return
     const next: Armed = info.offset.x > threshold() ? 'done' : info.offset.x < -threshold() ? 'snooze' : null
     if (next === armed) return
     if (next) navigator.vibrate?.(8)

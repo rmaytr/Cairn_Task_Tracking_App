@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { formatDue } from '../lib/dates'
 import { newId } from '../lib/ids'
+import { applyMove, rerank } from '../lib/reorder'
 import { DEFAULT_AREAS, MAX_AREAS } from '../model/defaults'
 import { nextOccurrence } from '../model/repeat'
 import { snooze } from '../model/snooze'
@@ -95,6 +96,11 @@ interface Actions {
   addTasks: (items: DraftWithArea[], options?: { replace?: boolean; newAreas?: Area[] }) => number
   updateTask: (id: string, patch: Partial<Omit<Task, 'id' | 'createdAt'>>) => void
   moveTask: (id: string, to: { horizon?: Horizon; areaId?: string }, label?: string) => void
+  /**
+   * "My order": `ids` is one list group, first to last, after the user moved `moved` (and maybe
+   * into another when/area via `to`). Sets ranks (and the move) as one undoable change.
+   */
+  reorderTasks: (ids: string[], moved: string, to?: { horizon?: Horizon; areaId?: string }, label?: string) => void
   /** "Not now": one day later, or one bucket out for an undated task. Undoable. */
   snoozeTask: (id: string) => void
   setDone: (id: string, done: boolean) => void
@@ -102,6 +108,8 @@ interface Actions {
   addStep: (taskId: string, title: string) => void
   updateStep: (taskId: string, stepId: string, patch: { title?: string; done?: boolean }) => void
   deleteStep: (taskId: string, stepId: string) => void
+  /** Moves a step to `toIndex` (clamped) in its task's list. Undoable. */
+  moveStep: (taskId: string, stepId: string, toIndex: number) => void
   addArea: (name: string, color?: AreaColor) => string | null
   updateArea: (id: string, patch: Partial<Omit<Area, 'id' | 'updatedAt'>>) => void
   deleteArea: (id: string, moveTasksTo: string) => void
@@ -264,6 +272,24 @@ export const useStore = create<StoreState>()(
           withUndo(label ?? 'Moved', () => mapTask(id, (t) => touch(t, to)))
         },
 
+        reorderTasks: (ids, moved, to, label) => {
+          const { tasks } = get()
+          const byId = new Map(tasks.map((t) => [t.id, t]))
+          const ranks = rerank(ids.flatMap((id) => byId.get(id) ?? []), moved)
+          const task = byId.get(moved)
+          const moves = Boolean(task && to && ((to.horizon ?? task.horizon) !== task.horizon || (to.areaId ?? task.areaId) !== task.areaId))
+          if (ranks.size === 0 && !moves) return
+          withUndo(label ?? 'Moved', () =>
+            set({
+              tasks: tasks.map((t) => {
+                const rank = ranks.get(t.id)
+                const patch = { ...(rank !== undefined && { rank }), ...(t.id === moved && moves && to) }
+                return rank !== undefined || (t.id === moved && moves) ? touch(t, patch) : t
+              }),
+            }),
+          )
+        },
+
         setDone: (id, done) => {
           const task = get().tasks.find((t) => t.id === id)
           if (!task || task.done === done) return
@@ -319,6 +345,15 @@ export const useStore = create<StoreState>()(
 
         deleteStep: (taskId, stepId) =>
           mapTask(taskId, (t) => touch(t, { steps: t.steps.filter((st) => st.id !== stepId) })),
+
+        moveStep: (taskId, stepId, toIndex) => {
+          const task = get().tasks.find((t) => t.id === taskId)
+          const from = task?.steps.findIndex((st) => st.id === stepId) ?? -1
+          if (!task || from < 0) return
+          const steps = applyMove(task.steps, from, toIndex)
+          if (steps.every((st, i) => st === task.steps[i])) return
+          withUndo('Moved step', () => mapTask(taskId, (t) => touch(t, { steps })))
+        },
 
         addArea: (name, color) => {
           const clean = name.trim().slice(0, 40)
