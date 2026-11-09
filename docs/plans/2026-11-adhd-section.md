@@ -1,6 +1,6 @@
 # Cairn: the ADHD toolkit (#adhd)
 
-Date: 2026-11-09. Owner: Rodion. Status: in progress on branch `adhd-section`.
+Date: 2026-11-09. Owner: Rodion. Status: built on branch `adhd-section`; reviewed (code, accessibility, fact-check) and fixed.
 
 ## Why
 

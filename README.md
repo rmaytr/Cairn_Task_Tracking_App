@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml)
 [![Deploy](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-1208%20unit%20%C2%B7%2044%20e2e-1b6e66)
+![Tests](https://img.shields.io/badge/tests-1323%20unit%20%C2%B7%2062%20e2e-1b6e66)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline-5a0fc8?logo=pwa&logoColor=white)
@@ -177,6 +177,30 @@ for the shortcuts sheet.
   set in Settings.
 - **Stuck nudge:** a task snoozed 3 times offers **Make it smaller** in its detail.
 
+### ADHD toolkit
+
+A section (sidebar *ADHD toolkit*, key `4`, or *More* on phones) for the moments a list can't help
+with: starting, staying, sensing time. Everything works offline and stays on your device.
+
+- **Focus room:** one task with every support on one screen: its next step, a guess-then-timer, focus
+  sound, a quiet companion that checks in, *Park it* for stray thoughts (they go to Later), a soft
+  "you've been at it a while" card, then a focus rating, a treat and a move break.
+- **I'm stuck:** say what's in the way (too big, don't know where to start, boring, it feels bad,
+  too many things, low energy) and get one move that ends in an action: a 2-minute first step, an
+  if-then plan, a 5-minute block, quick wins.
+- **Focus sounds:** white, pink and brown noise and rain, made in the browser (no audio files). It
+  compares your focus ratings with and without sound, because noise helps some people and bothers
+  others.
+- **Time sense:** learns how your guesses compare with the clock ("you usually take 1.4× your
+  guess"), pads new guesses, and shows last and best times for repeated tasks.
+- **Reward menu** and **Move break:** your own small rewards, offered right after a block, and a
+  90-second guided movement break with seated options.
+- **What works:** 17 short research cards with sources and an honest evidence label. Mark them
+  *Helps me*, *Want to try* or *Not for me* to build your playbook. *Your patterns* shows your best
+  time of day, guess ratio and sound vs silence once there's enough data.
+- **If-then plans** can be added to any task (*When I'll do it*). The task panel and Lock in also open
+  the Focus room.
+
 ### Look and feel
 
 - **Seven themes:** Stone (the light default), Notes (warm cream paper with a golden accent), Moss
@@ -322,7 +346,7 @@ More diagrams (data model, planner, reminders, sync) are in
 | --- | --- |
 | Application code | ~12,100 lines of TypeScript in 139 files |
 | Styles | ~5,200 lines of hand-written CSS, seven contrast-tested themes |
-| Automated tests | **1208** unit and integration tests · **44** end-to-end tests |
+| Automated tests | **1323** unit and integration tests · **62** end-to-end tests |
 | Runtime dependencies | 10 |
 | AI cost per captured task | ≈ $0.001 (Claude Haiku 5.5) |
 
@@ -398,7 +422,7 @@ Everything works without configuration. To turn on sync or the shared assistant,
 
 ```mermaid
 flowchart LR
-  P[Push to main] --> T[Type-check] --> L[Lint] --> U["1208 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
+  P[Push to main] --> T[Type-check] --> L[Lint] --> U["1323 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
 ```
 
 - **Unit and integration (Vitest):**
