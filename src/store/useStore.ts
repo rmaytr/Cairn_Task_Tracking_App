@@ -95,6 +95,8 @@ interface UiState {
   focusTimer: { taskId: string; timer: FocusTimer } | null
   /** ADHD toolkit page (#adhd/<tool>); null is the hub. */
   adhdTool: AdhdTool | null
+  /** Task the Focus room opens on; null lets the room pick (Up next). */
+  roomTaskId: string | null
   sync: SyncInfo
 }
 
@@ -165,6 +167,8 @@ interface Actions {
   logSession: (session: Omit<FocusSession, 'id'>) => string
   /** Sets or clears the "how was your focus?" rating of a logged block. */
   rateSession: (id: string, rating: number | null) => void
+  /** Opens the Focus room on a task (null: let the room pick). */
+  openRoom: (taskId: string | null) => void
 }
 
 export type StoreState = PersistedState & UiState & Actions
@@ -256,6 +260,7 @@ export const useStore = create<StoreState>()(
         focusTaskId: null,
         focusTimer: null,
         adhdTool: initialRoute().tool ?? null,
+        roomTaskId: null,
         sync: { status: 'off', email: null, lastSyncedAt: null, message: null, vault: 'unknown' },
 
         addTask: (draft, areaId, fallback = 'week') => {
@@ -578,6 +583,10 @@ export const useStore = create<StoreState>()(
             prefs: { ...s.prefs, adhd: { ...s.prefs.adhd, sessions: [...s.prefs.adhd.sessions, { ...session, id }].slice(-MAX_SESSIONS) } },
           }))
           return id
+        },
+        openRoom: (taskId) => {
+          set({ roomTaskId: taskId, selectedId: null })
+          get().navigate({ view: 'adhd', tool: 'room' })
         },
         rateSession: (id, rating) =>
           set((s) => ({
