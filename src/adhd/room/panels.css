@@ -1,0 +1,69 @@
+/* ---------- Focus room and Time sense: stone panels on one calm grid ---------- */
+.room-lede {
+  margin: -8px 0 16px;
+  color: var(--ink-2);
+  font-size: var(--step-1);
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.room-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: var(--radius-l);
+  background: var(--panel);
+}
+
+.room-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--step-1);
+  font-weight: 600;
+}
+
+.room-panel__eyebrow {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.room-panel__hint {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.room-panel__hint:empty {
+  display: none;
+}
+
+.room-empty {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.room-empty__text {
+  color: var(--ink-2);
+  font-size: var(--step-1);
+}
+
+/* Phones: one column, the timer first (it is first in the markup). */
+@media (max-width: 640px) {
+  .room-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .room-panel {
+    padding: 16px;
+  }
+}

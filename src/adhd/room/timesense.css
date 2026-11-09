@@ -1,0 +1,165 @@
+/* ---------- Time sense ---------- */
+.ts {
+  display: grid;
+  gap: 16px;
+}
+
+.ts-hero {
+  gap: 14px;
+}
+
+.ts-hero > .btn {
+  justify-self: start;
+}
+
+.ts-hero__big {
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  line-height: 1.05;
+}
+
+.ts-chart {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.ts-chart__svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  max-height: 160px;
+}
+
+.ts-chart__guess {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+}
+
+.ts-chart__actual {
+  fill: var(--primary);
+}
+
+.ts-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.ts-chart__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-chart__key {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.ts-chart__key--guess {
+  border: 1.5px solid var(--ink-3);
+  background: var(--surface);
+}
+
+.ts-chart__key--actual {
+  background: var(--primary);
+}
+
+.ts-chart__note {
+  color: var(--ink-3);
+}
+
+.ts-chart__table summary {
+  width: max-content;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.ts-chart__table table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+
+.ts-chart__table th,
+.ts-chart__table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.ts-chart__table th {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.ts-pad {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  font-weight: 560;
+}
+
+.ts-pad .field {
+  width: 8rem;
+}
+
+.ts-pad__out {
+  font-size: var(--step-1);
+  font-weight: 560;
+}
+
+.ts-ghosts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-ghosts li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.ts-ghosts__title {
+  font-weight: 560;
+}
+
+.ts-ghosts .num {
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.ts-why p {
+  max-width: 62ch;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.ts-why a {
+  color: var(--primary);
+}
+
+.ts-reset__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-reset__confirm p {
+  flex: 1 1 100%;
+  color: var(--ink-2);
+}
