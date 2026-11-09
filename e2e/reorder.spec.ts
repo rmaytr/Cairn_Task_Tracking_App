@@ -137,6 +137,7 @@ test.describe('reorder', () => {
     await seedToday(page)
     const today = panel(page, 'today-h')
     const [first, second, third] = await panelTitles(page, 'today-h')
+    const upNext = await page.locator('.next__title').textContent()
     const row = today.locator('.trow').first()
     await row.hover()
     const grip = (await row.locator('.trow__grip').boundingBox())!
@@ -148,6 +149,8 @@ test.describe('reorder', () => {
     await expectPersisted(page, '"sort":"manual"')
     await page.reload()
     await expect.poll(() => panelTitles(page, 'today-h').then((t) => t.slice(0, 3))).toEqual([second, third, first])
+    // My order makes Up next the top of Today; reordering the panel below it must not change it.
+    await expect(page.locator('.next__title')).toHaveText(upNext ?? '')
   })
 
   test('dragging a task from This week into Today moves it to today', async ({ page }) => {

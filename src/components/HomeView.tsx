@@ -5,6 +5,7 @@ import { daysBetween, formatDue, todayISO } from '../lib/dates'
 import { doneThisWeek, effectiveHorizon, nextStep } from '../model/derive'
 import { moveAllToToday, notNow, overdueTasks, spreadOverWeek } from '../model/freshStart'
 import type { Task } from '../model/types'
+import { applyMyOrder } from '../plan/lockin'
 import { orderTasks } from '../plan/order'
 import { headsUp } from '../reminders/reminders'
 import { useNotificationPermission } from '../reminders/useNotificationPermission'
@@ -70,20 +71,25 @@ export function HomeView() {
 
   const visible = useMemo(() => tasks.filter((t) => !hidden.includes(t.areaId)), [tasks, hidden])
   const dayPlan = useStore((s) => s.prefs.dayPlan)
-  // "Plan my day" (assistant) order wins for the day it was made; the local planner fills the rest.
+  const listSort = useStore((s) => s.prefs.listSort)
+  // "Plan my day" (assistant) order wins for the day it was made; then My order (so Up next is the
+  // top of your own Today list); otherwise the local planner.
   const plan = useMemo(() => {
     const local = orderTasks(visible, now)
-    if (!dayPlan || dayPlan.date !== todayISO(now)) return local
+    if (!dayPlan || dayPlan.date !== todayISO(now)) {
+      return listSort.sort === 'manual' ? applyMyOrder(local, now, listSort.reverse) : local
+    }
     const rank = new Map(dayPlan.ids.map((id, i) => [id, i]))
     return [...local].sort((a, b) => (rank.get(a.task.id) ?? 1e6) - (rank.get(b.task.id) ?? 1e6))
-  }, [visible, now, dayPlan])
+  }, [visible, now, dayPlan, listSort])
   const next = plan.find((p) => p.blockedBy.length === 0 && !p.task.waiting && !skipped.includes(p.task.id))?.task
-  const listSort = useStore((s) => s.prefs.listSort)
   // In My order the panels follow the ranks, like All tasks; otherwise the planner's order.
   const arrange = (items: typeof plan): typeof plan => (listSort.sort === 'manual' ? sortItems(items, 'manual', listSort.reverse) : items)
   const today = arrange(plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'today'))
   const week = arrange(plan.filter((p) => p.task.id !== next?.id && effectiveHorizon(p.task, now) === 'week'))
-  const todayGroup: OrderGroup = { key: 'today', title: 'Today', horizon: 'today', items: today }
+  // In My order Up next is the top of Today, so reordering the panel must keep it on top.
+  const lead = next && effectiveHorizon(next, now) === 'today' ? next.id : undefined
+  const todayGroup: OrderGroup = { key: 'today', title: 'Today', horizon: 'today', items: today, lead }
   const weekGroup: OrderGroup = { key: 'week', title: 'This week', horizon: 'week', items: week }
   // The two panels sit side by side on wide screens, so the lifted row follows the pointer sideways too.
   const { rootRef, drag, rowReorder, withGap, announcer } = useTaskReorder([todayGroup, weekGroup], listSort, now, { axis: 'xy' })

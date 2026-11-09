@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { localPlan, localReason, mergeAssistantPlan, pinnedPlan } from '../lockin'
+import { applyMyOrder, localPlan, localReason, mergeAssistantPlan, pinnedPlan } from '../lockin'
 import { NOW, makeTask } from './fixtures'
 
 describe('localPlan', () => {
@@ -19,6 +19,31 @@ describe('localPlan', () => {
 
   it('leaves done tasks out', () => {
     expect(localPlan([makeTask('a', { done: true }), makeTask('b')], NOW).ids).toEqual(['b'])
+  })
+
+  it('in My order, picks the top of your own Today list, not the planner’s favourite', () => {
+    const tasks = [
+      makeTask('urgent', { horizon: 'today', due: '2026-10-21', high: true, rank: 2 }),
+      makeTask('mine', { horizon: 'today', rank: 1 }),
+    ]
+    expect(localPlan(tasks, NOW).ids[0]).toBe('urgent')
+    expect(localPlan(tasks, NOW, { sort: 'manual', reverse: false }).ids[0]).toBe('mine')
+    expect(localPlan(tasks, NOW, { sort: 'smart', reverse: false }).ids[0]).toBe('urgent')
+  })
+})
+
+describe('applyMyOrder', () => {
+  it('orders Today, then This week, by rank and keeps later tasks in planner order', () => {
+    const items = [
+      makeTask('later-a', { horizon: 'later', rank: 0 }),
+      makeTask('week-b', { horizon: 'week', rank: 2 }),
+      makeTask('today-b', { horizon: 'today', rank: 5 }),
+      makeTask('week-a', { horizon: 'week', rank: 1 }),
+      makeTask('today-a', { horizon: 'today', rank: 3 }),
+      makeTask('later-b', { horizon: 'later' }),
+    ].map((task) => ({ task }))
+    expect(applyMyOrder(items, NOW, false).map((i) => i.task.id)).toEqual(['today-a', 'today-b', 'week-a', 'week-b', 'later-a', 'later-b'])
+    expect(applyMyOrder(items, NOW, true).map((i) => i.task.id).slice(0, 2)).toEqual(['today-b', 'today-a'])
   })
 })
 

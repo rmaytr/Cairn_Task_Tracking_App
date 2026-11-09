@@ -24,6 +24,7 @@ const focusSoon = (selector: string): void => {
  */
 export function FocusRoom() {
   const tasks = useStore((s) => s.tasks)
+  const listSort = useStore((s) => s.prefs.listSort)
   const focusTimer = useStore((s) => s.focusTimer)
   const roomTaskId = useStore((s) => s.roomTaskId)
   const sound = useStore((s) => s.prefs.feedback.sound)
@@ -32,7 +33,7 @@ export function FocusRoom() {
   const now = useNow()
   const [chosen, setChosen] = useState<string | null>(() => {
     const s = useStore.getState()
-    return pickStartTask(s.tasks, { timerTaskId: s.focusTimer?.taskId ?? null, roomTaskId: s.roomTaskId }, new Date())
+    return pickStartTask(s.tasks, { timerTaskId: s.focusTimer?.taskId ?? null, roomTaskId: s.roomTaskId }, new Date(), s.prefs.listSort)
   })
 
   // A task sent here while the room is open ("Focus room" elsewhere) becomes the choice, once.
@@ -53,7 +54,7 @@ export function FocusRoom() {
   // The wrap-up belongs to this visit: leaving the room drops it, so it doesn't reappear much later.
   useEffect(() => () => useRoom.setState({ ended: null }), [])
 
-  const { plan, ordered } = useMemo(() => upNext(tasks, now), [tasks, now])
+  const { plan, ordered } = useMemo(() => upNext(tasks, now, listSort), [tasks, now, listSort])
 
   const running = focusTimer ? tasks.find((t) => t.id === focusTimer.taskId) : undefined
   if (focusTimer && running) {

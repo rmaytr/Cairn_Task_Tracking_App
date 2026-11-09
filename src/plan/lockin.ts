@@ -1,4 +1,6 @@
 import { daysBetween, todayISO } from '../lib/dates'
+import { sortByRank } from '../lib/reorder'
+import { effectiveHorizon } from '../model/derive'
 import { priorityOf, type Task } from '../model/types'
 import { dependents, orderTasks } from './order'
 
@@ -34,12 +36,29 @@ export function localReason(task: Task, tasks: readonly Task[], now: Date): stri
   return null
 }
 
+/** The Tasks list sort the user picked; 'manual' is "My order". */
+export interface ListOrder {
+  sort: string
+  reverse: boolean
+}
+
+/** "My order": your own ranks within Today, then within This week; later tasks keep the planner's order. */
+export function applyMyOrder<T extends { task: Task }>(items: readonly T[], now: Date, reverse: boolean): T[] {
+  const band = (h: string): T[] => {
+    const mine = sortByRank(items.filter((i) => effectiveHorizon(i.task, now) === h), (i) => i.task.rank)
+    return reverse ? mine.reverse() : mine
+  }
+  const rest = items.filter((i) => !['today', 'week'].includes(effectiveHorizon(i.task, now)))
+  return [...band('today'), ...band('week'), ...rest]
+}
+
 /**
- * The local plan: the planner's order, with tasks that can start now (not waiting on another
- * task or on someone) ahead of the ones that can't.
+ * The local plan: the planner's order (or the user's own, in My order), with tasks that can start
+ * now (not waiting on another task or on someone) ahead of the ones that can't.
  */
-export function localPlan(tasks: readonly Task[], now: Date): LockInPlan {
-  const items = orderTasks(tasks, now)
+export function localPlan(tasks: readonly Task[], now: Date, order?: ListOrder): LockInPlan {
+  const planned = orderTasks(tasks, now)
+  const items = order?.sort === 'manual' ? applyMyOrder(planned, now, order.reverse) : planned
   const ready = items.filter((p) => p.blockedBy.length === 0 && !p.task.waiting)
   const later = items.filter((p) => p.blockedBy.length > 0 || p.task.waiting)
   const ids = [...ready, ...later].map((p) => p.task.id)

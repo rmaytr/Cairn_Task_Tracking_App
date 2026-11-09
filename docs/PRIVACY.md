@@ -17,6 +17,9 @@ shared with friends. It is not a business, shows no ads, and sells nothing.
   in Settings → Assistant). When it's on, the text of a new task plus the titles,
   areas, due dates and priorities of your open tasks go to Anthropic's Claude API to be sorted. Notes
   and steps are never sent.
+- **The ADHD toolkit stays on your device.** Focus-block history (task titles, times, guesses and
+  ratings), the reward menu and the playbook are stored only in this browser, never synced or sent,
+  and "sign out and wipe" removes them.
 
 ## What we collect
 

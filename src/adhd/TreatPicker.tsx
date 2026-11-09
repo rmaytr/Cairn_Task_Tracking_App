@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../components/Icon'
 import { useStore } from '../store/useStore'
 import { rotateTreats } from './unstuck/treats'
 import './unstuck/unstuck.css'
@@ -38,9 +37,6 @@ export function TreatPicker({ onDone }: TreatPickerProps) {
   }
   return (
     <div className="treatpick" role="group" aria-label="Pick a treat">
-      <p className="treatpick__title">
-        <Icon name="gift" size={16} /> You earned a small treat
-      </p>
       {options.length === 0 ? (
         <p className="treatpick__note">Your reward menu is empty. You can add treats from the toolkit.</p>
       ) : (

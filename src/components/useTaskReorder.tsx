@@ -24,6 +24,8 @@ export interface OrderGroup {
   area?: Area
   horizon?: Horizon
   items: readonly { task: Task }[]
+  /** A task shown above the group (Today's Up next) that keeps first place when ranks are written. */
+  lead?: string
 }
 
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, normal: 1, low: 2 }
@@ -68,7 +70,8 @@ export function commitTaskOrder(seen: string[], id: string, group: Omit<OrderGro
     return `Moved ‘${task.title}’ to ${group.title}`
   }
   const switching = list.sort !== 'manual'
-  reorderTasks(list.reverse ? [...seen].reverse() : seen, id, to, where || (switching ? 'Switched to My order' : 'Moved'))
+  const ids = group.lead && group.lead !== id ? [group.lead, ...seen.filter((x) => x !== group.lead)] : seen
+  reorderTasks(list.reverse ? [...ids].reverse() : ids, id, to, where || (switching ? 'Switched to My order' : 'Moved'))
   if (switching) setPrefs({ listSort: { sort: 'manual', reverse: list.reverse } })
   return `Moved ‘${task.title}’ to position ${seen.indexOf(id) + 1} of ${seen.length}${cross ? ` in ${group.title}` : ''}`
 }

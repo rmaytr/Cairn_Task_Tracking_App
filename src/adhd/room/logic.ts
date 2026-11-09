@@ -1,6 +1,6 @@
 /** Pure rules and copy for the Focus room and Time sense. No React, no store. */
 import type { Task } from '../../model/types'
-import { localPlan } from '../../plan/lockin'
+import { localPlan, type ListOrder } from '../../plan/lockin'
 import { pastRuns, suggestMinutes, type GuessRatio } from '../calibration'
 import type { FocusSession } from '../types'
 
@@ -15,12 +15,13 @@ export function pickStartTask(
   tasks: readonly Task[],
   from: { timerTaskId: string | null; roomTaskId: string | null },
   now: Date,
+  order?: ListOrder,
 ): string | null {
   const open = tasks.filter((t) => !t.done)
   const isOpen = (id: string | null): id is string => id !== null && open.some((t) => t.id === id)
   if (isOpen(from.timerTaskId)) return from.timerTaskId
   if (isOpen(from.roomTaskId)) return from.roomTaskId
-  return localPlan(open, now).ids[0] ?? null
+  return localPlan(open, now, order).ids[0] ?? null
 }
 
 /** The soft "N minutes left" notice: 5 in the last five (only for blocks of 10+ min), 1 in the last one. */

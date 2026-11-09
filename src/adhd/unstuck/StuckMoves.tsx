@@ -192,7 +192,8 @@ export function PickOne() {
   const now = useNow()
   const tasks = useStore((s) => s.tasks)
   const startFocus = useStore((s) => s.startFocus)
-  const plan = localPlan(tasks.filter((t) => !t.done), now)
+  const listSort = useStore((s) => s.prefs.listSort)
+  const plan = localPlan(tasks.filter((t) => !t.done), now, listSort)
   const pick = tasks.find((t) => t.id === plan.ids[0])
   if (!pick) return <p className="stuck__lede">Nothing is open. That’s fine.</p>
   return (

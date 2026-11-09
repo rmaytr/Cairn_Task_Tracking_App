@@ -75,7 +75,7 @@ export function LockInView() {
     const all = filterByEffort(useStore.getState().tasks, filter)
     const transport = ai === 'off' ? null : await getTransport()
     if (!transport) {
-      setPhase({ kind: 'go', plan: localPlan(all, new Date()), index: 0 })
+      setPhase({ kind: 'go', plan: localPlan(all, new Date(), useStore.getState().prefs.listSort), index: 0 })
       return
     }
     try {
@@ -84,7 +84,7 @@ export function LockInView() {
       setPhase({ kind: 'go', plan: mergeAssistantPlan(result.order, result.summary, latest, new Date()), index: 0 })
     } catch (error) {
       showToast(`${assistantError(error)} Using your deadlines and priorities instead.`)
-      setPhase({ kind: 'go', plan: localPlan(filterByEffort(useStore.getState().tasks, filter), new Date()), index: 0 })
+      setPhase({ kind: 'go', plan: localPlan(filterByEffort(useStore.getState().tasks, filter), new Date(), useStore.getState().prefs.listSort), index: 0 })
     }
   }
 

@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml)
 [![Deploy](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-1323%20unit%20%C2%B7%2062%20e2e-1b6e66)
+![Tests](https://img.shields.io/badge/tests-1325%20unit%20%C2%B7%2062%20e2e-1b6e66)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline-5a0fc8?logo=pwa&logoColor=white)
@@ -346,7 +346,7 @@ More diagrams (data model, planner, reminders, sync) are in
 | --- | --- |
 | Application code | ~12,100 lines of TypeScript in 139 files |
 | Styles | ~5,200 lines of hand-written CSS, seven contrast-tested themes |
-| Automated tests | **1323** unit and integration tests · **62** end-to-end tests |
+| Automated tests | **1325** unit and integration tests · **62** end-to-end tests |
 | Runtime dependencies | 10 |
 | AI cost per captured task | ≈ $0.001 (Claude Haiku 5.5) |
 
@@ -422,7 +422,7 @@ Everything works without configuration. To turn on sync or the shared assistant,
 
 ```mermaid
 flowchart LR
-  P[Push to main] --> T[Type-check] --> L[Lint] --> U["1323 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
+  P[Push to main] --> T[Type-check] --> L[Lint] --> U["1325 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
 ```
 
 - **Unit and integration (Vitest):**

@@ -19,6 +19,7 @@ const MOVE_TITLE: Record<Blocker, string> = {
 /** #adhd/unstuck: which task, what's in the way, one move that ends in a real action. */
 export function Unstuck() {
   const tasks = useStore((s) => s.tasks)
+  const listSort = useStore((s) => s.prefs.listSort)
   const now = useNow()
   const [taskId, setTaskId] = useState<string | null>(null)
   const [choosing, setChoosing] = useState(false)
@@ -27,7 +28,7 @@ export function Unstuck() {
   const heading = useRef<HTMLHeadingElement>(null)
   const firstRender = useRef(true)
 
-  const { ordered } = useMemo(() => upNext(tasks, now), [tasks, now])
+  const { ordered } = useMemo(() => upNext(tasks, now, listSort), [tasks, now, listSort])
   const task = ordered.find((t) => t.id === taskId) ?? ordered[0]
 
   // Move focus to the new step's heading so keyboard and screen-reader users land on it.
