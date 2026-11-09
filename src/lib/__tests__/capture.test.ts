@@ -113,7 +113,71 @@ describe('parseCapture', () => {
     })
 
     it('leaves unknown ~words in the title', () => {
-      expect(parse('Approx ~5 min').draft.title).toBe('Approx ~5 min')
+      expect(parse('Approx ~soon').draft.title).toBe('Approx ~soon')
+    })
+  })
+
+  describe('effort from a duration', () => {
+    it.each([
+      ['Stretch 15 min', 'Stretch', 's'],
+      ['Stretch 20m', 'Stretch', 's'],
+      ['Stretch for 30 minutes', 'Stretch', 's'],
+      ['Tidy desk ~5 min', 'Tidy desk', 's'],
+      ['Read 45 mins', 'Read', 'm'],
+      ['Write draft 1h', 'Write draft', 'm'],
+      ['Write draft 1.5 hrs', 'Write draft', 'm'],
+      ['Clean garage 2 hours', 'Clean garage', 'l'],
+      ['Clean garage 3h', 'Clean garage', 'l'],
+    ])('%j', (input, title, effort) => {
+      const { draft, chips } = parse(input)
+      expect(draft).toEqual({ title, effort })
+      expect(chips).toEqual([{ kind: 'effort', label: { s: 'Quick', m: 'Medium', l: 'Big' }[effort] }])
+    })
+
+    it('reads "quick" as a quick task and keeps the word', () => {
+      expect(parse('Quick call with Sam').draft).toEqual({ title: 'Quick call with Sam', effort: 's' })
+      expect(parse('Sort mail quickly').draft).toEqual({ title: 'Sort mail quickly' })
+    })
+
+    it('lets an explicit ~effort win', () => {
+      expect(parse('Quick review ~l').draft).toEqual({ title: 'Quick review', effort: 'l' })
+      expect(parse('Review 10 min ~big').draft).toEqual({ title: 'Review', effort: 'l' })
+    })
+
+    it('ignores numbers that are not durations', () => {
+      expect(parse('Call at 3pm').draft).toEqual({ title: 'Call at 3pm' })
+      expect(parse('Buy 2m of fabric').draft).toEqual({ title: 'Buy 2m of fabric' })
+      expect(parse('Run 5 miles').draft).toEqual({ title: 'Run 5 miles' })
+      expect(parse('Read chapters 3 and 4').draft).toEqual({ title: 'Read chapters 3 and 4' })
+    })
+
+    it('keeps the duration when it is the whole title', () => {
+      expect(parse('15 min').draft).toEqual({ title: '15 min', effort: 's' })
+    })
+  })
+
+  describe('repeat', () => {
+    it.each([
+      ['Take vitamins every day', 'Take vitamins', 'daily'],
+      ['Journal every night', 'Journal', 'daily'],
+      ['Water plants every week', 'Water plants', 'weekly'],
+      ['Pay rent every month', 'Pay rent', 'monthly'],
+      ['Every week call grandma', 'call grandma', 'weekly'],
+    ])('%j', (input, title, repeat) => {
+      const { draft, chips } = parse(input)
+      expect(draft).toEqual({ title, repeat })
+      expect(chips).toEqual([{ kind: 'repeat', label: { daily: 'Every day', weekly: 'Every week', monthly: 'Every month' }[repeat] }])
+    })
+
+    it('"every Monday" repeats weekly from the next Monday', () => {
+      expect(parse('Team sync every Monday').draft).toEqual({ title: 'Team sync', repeat: 'weekly', due: '2026-10-26' })
+      expect(parse('Gym every fri').draft).toEqual({ title: 'Gym', repeat: 'weekly', due: '2026-10-23' })
+    })
+
+    it('leaves other "every" phrases alone', () => {
+      expect(parse('Check every weekday').draft).toEqual({ title: 'Check every weekday' })
+      expect(parse('Read every other chapter').draft).toEqual({ title: 'Read every other chapter' })
+      expect(parse('Everyday carry list').draft).toEqual({ title: 'Everyday carry list' })
     })
   })
 

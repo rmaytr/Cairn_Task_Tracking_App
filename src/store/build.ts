@@ -33,5 +33,6 @@ export function draftToTask(draft: TaskDraft, areaId: string, now: Date, fallbac
     createdAt: time,
     updatedAt: time,
     spentMinutes: 0,
+    ...(draft.repeat && draft.repeat !== 'none' && { repeat: draft.repeat }),
   }
 }

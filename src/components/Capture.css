@@ -29,24 +29,45 @@
   padding-left: 22px;
 }
 
+.capture__box--multi {
+  align-items: flex-end;
+  border-radius: var(--radius-l);
+}
+
+/* As tall as one line of text, so it lines up with the last line when the box grows. */
 .capture__icon {
   display: grid;
+  place-items: center;
+  height: 44px;
   color: var(--ink-3);
 }
 
+.capture--hero .capture__icon {
+  height: 52px;
+}
+
+/* A textarea that grows from 1 to 8 lines (JS sets the height where field-sizing is missing). */
 .capture__input {
+  --row: 44px;
   flex: 1;
   min-width: 0;
-  height: 44px;
+  min-height: var(--row);
+  max-height: calc(7lh + var(--row));
+  padding: calc((var(--row) - 1lh) / 2) 0;
   border: 0;
   background: transparent;
   outline: none;
+  resize: none;
+  overflow-y: auto;
+  field-sizing: content;
+  font: inherit;
   font-size: var(--step-0);
   font-weight: 420;
+  line-height: 1.4;
 }
 
 .capture--hero .capture__input {
-  height: 52px;
+  --row: 52px;
   font-size: var(--step-1);
 }
 
@@ -115,6 +136,139 @@
   font-weight: 600;
   outline: none;
   cursor: pointer;
+}
+
+.capture__count {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.capture__count .capture__hint {
+  font-weight: 400;
+}
+
+.capture__chip,
+.capture__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+  font-size: var(--step--1);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.capture__link {
+  font-weight: 600;
+}
+
+.capture__chip:hover,
+.capture__link:hover {
+  background: var(--primary-soft-hover);
+}
+
+.capture__chip:focus-visible,
+.capture__link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.capture__dup {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.capture__list {
+  display: grid;
+  gap: 4px;
+  max-height: min(50vh, 420px);
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  list-style: none;
+}
+
+.capture__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 'title meta drop';
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 40px;
+  padding: 4px 4px 4px 12px;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  font-size: var(--step--1);
+}
+
+.capture__row-title {
+  grid-area: title;
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.capture__row-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.capture__row-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+}
+
+.capture__row-area .dot {
+  width: 8px;
+  height: 8px;
+}
+
+.capture__drop {
+  grid-area: drop;
+  width: 32px;
+  height: 32px;
+}
+
+/* Phone: the title and × share the first line; the pills sit under the title. */
+@media (max-width: 560px) {
+  .capture__row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'title drop'
+      'meta meta';
+    padding-bottom: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .capture__row {
+    animation: capture-row-in 0.18s ease-out;
+  }
+}
+
+@keyframes capture-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
 }
 
 .capture__ai {

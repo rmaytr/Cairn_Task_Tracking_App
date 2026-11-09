@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 import { parseCapture } from '../lib/capture'
 import { resolveArea } from '../lib/classify'
-import type { Area } from '../model/types'
-import { useStore } from '../store/useStore'
+import { horizonForDue } from '../lib/dates'
+import type { Area, Effort, Repeat } from '../model/types'
+import { useStore, type DraftWithArea } from '../store/useStore'
 import { enrichWithAssistant } from './enrich'
 
 export interface CapturePreview {
@@ -11,6 +12,8 @@ export interface CapturePreview {
   guessed: boolean
   due: string | null
   high: boolean
+  repeat?: Repeat
+  effort?: Effort
 }
 
 /** What a typed line will become, without saving it (for the live preview under the input). */
@@ -25,7 +28,26 @@ export function previewCapture(text: string, forcedAreaId: string | null, areas:
     guessed: !forcedAreaId && resolved.guessed,
     due: draft.due ?? null,
     high: Boolean(draft.high),
+    ...(draft.repeat && { repeat: draft.repeat }),
+    ...(draft.effort && { effort: draft.effort }),
   }
+}
+
+/** Parses brain-dump lines into drafts for `addTasks`, placed like a single capture would be; `text` is the line. */
+export function captureItems(
+  lines: string[],
+  forcedAreaId: string | null,
+  areas: Area[],
+  now: Date,
+): (DraftWithArea & { text: string })[] {
+  return lines.flatMap((line) => {
+    const preview = previewCapture(line, forcedAreaId, areas)
+    if (!preview || !preview.title.trim()) return []
+    const { draft } = parseCapture(line, areas, now)
+    // addTasks falls back to "later" (right for imports); a capture without a date is for this week.
+    const horizon = draft.horizon ?? horizonForDue(draft.due ?? null, now) ?? 'week'
+    return [{ draft: { ...draft, area: undefined, horizon }, areaId: preview.areaId, text: line }]
+  })
 }
 
 /**
@@ -46,5 +68,31 @@ export function useAddTask(): (text: string, forcedAreaId?: string | null) => st
       return id
     },
     [addTask],
+  )
+}
+
+/** One at a time, so a long dump doesn't fire a burst of assistant requests. */
+async function enrichInOrder(items: { id: string; text: string }[], areaLocked: boolean): Promise<void> {
+  for (const { id, text } of items) await enrichWithAssistant(id, text, areaLocked)
+}
+
+/**
+ * Adds a brain dump (one task per line) with one Undo ("Added N tasks"), then lets the
+ * assistant, if on, sort each one. Returns the new ids in line order.
+ */
+export function useAddTasks(): (lines: string[], forcedAreaId?: string | null) => string[] {
+  const addTasks = useStore((s) => s.addTasks)
+  return useCallback(
+    (lines: string[], forcedAreaId: string | null = null) => {
+      const { areas } = useStore.getState()
+      const items = captureItems(lines, forcedAreaId, areas, new Date())
+      if (items.length === 0) return []
+      const count = addTasks(items.map(({ draft, areaId }) => ({ draft, areaId })))
+      // addTasks appends in order, so the new tasks are the last `count`.
+      const ids = useStore.getState().tasks.slice(-count).map((t) => t.id)
+      void enrichInOrder(ids.map((id, i) => ({ id, text: items[i]?.text ?? '' })), forcedAreaId !== null)
+      return ids
+    },
+    [addTasks],
   )
 }

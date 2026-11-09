@@ -90,6 +90,47 @@ test.describe('capture', () => {
     await expect(dialog).toBeHidden()
     await expect.poll(() => areaTotal(page)).toBe(2)
   })
+
+  test('a pasted list previews each task, drops one, and adds the rest with one Undo', async ({ page }) => {
+    await startEmpty(page)
+    const input = captureInput(page)
+    await input.fill('Groceries:\n- [ ] Buy stamps tomorrow\n- [x] Already done\n2. Call the bank !\n* Water plants every week')
+    const list = page.getByRole('list', { name: 'Tasks to add' })
+    await expect(list.getByRole('listitem')).toHaveCount(3)
+    await expect(page.locator('.capture__count')).toContainText('3 tasks')
+    await list.getByRole('button', { name: 'Don’t add “Water plants”' }).click()
+    await expect(list.getByRole('listitem')).toHaveCount(2)
+    await expect(input).toBeFocused()
+
+    await input.press('Enter')
+    await expect(input).toHaveValue('')
+    await expect(toast(page)).toContainText('Added 2 tasks')
+    await expect.poll(() => areaTotal(page)).toBe(2)
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(() => areaTotal(page)).toBe(0)
+  })
+
+  test('Shift+Enter starts a new line; one sentence offers a split', async ({ page }) => {
+    await startEmpty(page)
+    const input = captureInput(page)
+    await input.fill('call mom, buy milk and finish the essay')
+    await page.getByRole('button', { name: /Looks like 3 tasks/ }).click()
+    await expect(input).toHaveValue('call mom\nbuy milk\nfinish the essay')
+    await input.press('Control+End')
+    await input.press('Shift+Enter')
+    await input.pressSequentially('pay rent')
+    await expect(page.getByRole('list', { name: 'Tasks to add' }).getByRole('listitem')).toHaveCount(4)
+  })
+
+  test('a near-duplicate is pointed out but never blocks adding', async ({ page }) => {
+    await startEmpty(page)
+    await captureTask(page, 'Call the bank')
+    const input = captureInput(page)
+    await input.fill('call bank')
+    await expect(page.locator('.capture__dup')).toContainText('Already on your list: ‘Call the bank’')
+    await input.press('Enter')
+    await expect.poll(() => areaTotal(page)).toBe(2)
+  })
 })
 
 test.describe('areas', () => {
