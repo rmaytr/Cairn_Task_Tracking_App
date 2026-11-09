@@ -90,3 +90,10 @@
     gap: 4px;
   }
 }
+
+/* Five across leaves no room for "Locked in" on a phone: wrap into rows of whole labels. */
+@media (max-width: 480px) {
+  .room-rate__opts {
+    grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  }
+}

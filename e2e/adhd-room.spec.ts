@@ -48,4 +48,25 @@ test.describe('Focus room', () => {
     await expect(row).toContainText('5 min')
     await expect(row).toContainText('3 min')
   })
+
+  test('the focus rating fits a 320px screen', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 })
+    await loadSample(page)
+    const t0 = Date.now()
+    await page.clock.setFixedTime(t0)
+    await page.goto('/#adhd/room')
+    await page.getByRole('button', { name: '5 min', exact: true }).click()
+    await page.getByRole('button', { name: 'Start 5 min' }).click()
+    await page.clock.setFixedTime(t0 + 2 * MIN)
+    await page.getByRole('button', { name: 'Stop and wrap up' }).click()
+
+    const opts = page.locator('.room-rate__opt')
+    await expect(opts).toHaveCount(5)
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow).toBeLessThanOrEqual(0)
+    for (const opt of await opts.all()) {
+      const fits = await opt.evaluate((el) => el.scrollWidth <= el.clientWidth)
+      expect(fits).toBe(true)
+    }
+  })
 })

@@ -156,6 +156,8 @@
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
+  /* A primary ring, like the selected card, so selection doesn't rest on a faint surface change. */
+  box-shadow: inset 0 0 0 2px var(--primary);
 }
 
 .slab__seg input:focus-visible + span {

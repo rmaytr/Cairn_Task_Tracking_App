@@ -39,7 +39,7 @@ export function AdhdHub() {
   return (
     <div className="hub">
       <header className="hub__head">
-        <h1 id="adhd-title" className="hub__title display">
+        <h1 id="adhd-title" className="hub__title display" tabIndex={-1}>
           ADHD toolkit
         </h1>
         <p className="hub__lede">Tools for the moments a list can’t help with: starting, staying, sensing time.</p>

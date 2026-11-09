@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store/useStore'
 import { rotateTreats } from './unstuck/treats'
@@ -18,13 +18,19 @@ export function TreatPicker({ onDone }: TreatPickerProps) {
   const blocks = useStore((s) => s.prefs.adhd.sessions.length)
   const [picked, setPicked] = useState<string | null>(null)
   const options = rotateTreats(treats, blocks * 3)
+  const done = useRef<HTMLButtonElement>(null)
+
+  // The picked button is gone; land on the Done button that replaced it.
+  useEffect(() => {
+    if (picked) done.current?.focus()
+  }, [picked])
 
   if (picked) {
     return (
       <div className="treatpick" role="status">
         <p className="treatpick__title">Enjoy it: {picked}</p>
         <p className="treatpick__note">Back in 10 minutes? No rush.</p>
-        <button type="button" className="btn btn--primary btn--sm" onClick={onDone}>
+        <button type="button" className="btn btn--primary btn--sm" ref={done} onClick={onDone}>
           Done
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { useStore } from '../store/useStore'
 import { guessRatio, MIN_GUESSES, suggestMinutes } from './calibration'
@@ -16,11 +16,20 @@ export function TimeSense() {
   const navigate = useStore((s) => s.navigate)
   const [guess, setGuess] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const resetButton = useRef<HTMLButtonElement>(null)
+  const wasConfirming = useRef(false)
   const ratio = guessRatio(sessions)
   const guessed = sessions.filter((s) => s.guessMin !== null && s.guessMin > 0 && s.actualMin >= 1).length
   const repeats = repeatedTasks(sessions)
   const n = Math.round(Number(guess))
   const valid = guess !== '' && n >= 1 && n <= MAX_GUESS
+
+  // Leaving the confirm step removes the focused button: go back to Reset, or to the page title once
+  // the history (and the whole reset section) is gone.
+  useEffect(() => {
+    if (wasConfirming.current && !confirming) (resetButton.current ?? document.getElementById('adhd-tool-title'))?.focus()
+    wasConfirming.current = confirming
+  }, [confirming])
 
   return (
     <div className="ts">
@@ -134,7 +143,7 @@ export function TimeSense() {
               </button>
             </div>
           ) : (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setConfirming(true)}>
+            <button type="button" className="btn btn--ghost btn--sm" ref={resetButton} onClick={() => setConfirming(true)}>
               Reset my history
             </button>
           )}

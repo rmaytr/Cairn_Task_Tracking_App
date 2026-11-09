@@ -133,6 +133,8 @@
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
+  /* A primary ring, so "Want to try" / "Not for me" read as chosen without relying on the surface. */
+  box-shadow: inset 0 0 0 2px var(--primary);
 }
 
 .marks__btn[aria-pressed='true'] svg {

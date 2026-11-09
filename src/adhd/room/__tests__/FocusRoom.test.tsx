@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_AREAS } from '../../../model/defaults'
@@ -68,8 +68,45 @@ describe('FocusRoom', () => {
     expect(state().prefs.adhd.sessions[0]).toMatchObject({ title: 'Essay', guessMin: 10, actualMin: 10, rating: 4 })
     expect(state().tasks.find((t) => t.id === essay)?.spentMinutes).toBe(10)
 
+    // Treat and break swap out the pressed button; focus lands on what replaced it.
+    await user.click(screen.getAllByRole('button').find((b) => b.closest('.treatpick ul'))!)
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Done' }))
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: /A small treat/ }))
+    await user.click(screen.getByRole('button', { name: 'Ninety seconds of moving' }))
+    expect(screen.getByRole('heading', { level: 4 })).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'End break' }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Ninety seconds of moving' }))
+    await user.click(screen.getByRole('button', { name: /Mark “Essay” done/ }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Another block' }))
+
     await user.click(screen.getByRole('button', { name: 'Another block' }))
     expect(screen.getByRole('heading', { name: 'How long do you think this will take?' })).toBeTruthy()
+  })
+
+  it('says a block is running when another task is sent, and hands over to it after', async () => {
+    const user = userEvent.setup()
+    const a = state().addTask({ title: 'Essay' }, 'classes')
+    const b = state().addTask({ title: 'Laundry' }, 'classes')
+    state().startFocusTimer(a, 25, Date.now() - 5 * 60_000)
+    render(<FocusRoom />)
+    act(() => state().openRoom(b))
+
+    expect(screen.getByText('A block on ‘Essay’ is running. Wrap it up to switch to ‘Laundry’.')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /Stop and wrap up|Wrap up/ }))
+    await user.click(screen.getByRole('button', { name: 'Another block' }))
+    expect(screen.getByRole('heading', { name: 'Laundry' })).toBeTruthy()
+  })
+
+  it('drops the wrap-up when you leave the room', async () => {
+    const user = userEvent.setup()
+    const id = state().addTask({ title: 'Essay' }, 'classes')
+    state().startFocusTimer(id, 25, Date.now() - 5 * 60_000)
+    const { unmount } = render(<FocusRoom />)
+    await user.click(screen.getByRole('button', { name: /Stop and wrap up|Wrap up/ }))
+    expect(useRoom.getState().ended).not.toBeNull()
+    unmount()
+    expect(useRoom.getState().ended).toBeNull()
   })
 
   it('resumes a running block when you come back', () => {
@@ -110,6 +147,9 @@ describe('TimeSense', () => {
     await user.type(screen.getByRole('spinbutton', { name: 'My guess, in minutes' }), '20')
     expect(screen.getByText('Plan for about 30 min.')).toBeTruthy()
 
+    await user.click(screen.getByRole('button', { name: 'Reset my history' }))
+    await user.click(screen.getByRole('button', { name: 'Keep it' }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Reset my history' }))
     await user.click(screen.getByRole('button', { name: 'Reset my history' }))
     expect(state().prefs.adhd.sessions).toHaveLength(3)
     await user.click(screen.getByRole('button', { name: 'Clear my history' }))

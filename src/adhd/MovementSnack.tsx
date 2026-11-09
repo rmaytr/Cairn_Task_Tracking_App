@@ -8,6 +8,8 @@ import './unstuck/unstuck.css'
 export interface MovementSnackProps {
   /** Called when the break ends or is skipped. */
   onDone: () => void
+  /** Heading level for its titles: 2 on its own page, deeper when embedded under another heading. */
+  headingLevel?: 2 | 3 | 4
 }
 
 interface Clock {
@@ -16,7 +18,8 @@ interface Clock {
 }
 
 /** A ~90 second guided movement break: one move at a time with a countdown. */
-export function MovementSnack({ onDone }: MovementSnackProps) {
+export function MovementSnack({ onDone, headingLevel = 2 }: MovementSnackProps) {
+  const H = `h${headingLevel}` as const
   const reduce = useReducedMotion()
   const [clock, setClock] = useState<Clock>({ index: 0, left: MOVES[0]!.seconds })
   const [paused, setPaused] = useState(false)
@@ -42,8 +45,8 @@ export function MovementSnack({ onDone }: MovementSnackProps) {
 
   if (finished || !move) {
     return (
-      <div className="mv" role="status">
-        <h2 ref={heading} tabIndex={-1} className="stuck__h">Nice. That’s the break.</h2>
+      <div className="mv">
+        <H ref={heading} tabIndex={-1} className="stuck__h">Nice. That’s the break.</H>
         <p className="stuck__lede">Your body has had a moment. Whenever you’re ready.</p>
         <button type="button" className="btn btn--primary btn--lg" onClick={onDone}>
           Back to it
@@ -57,7 +60,7 @@ export function MovementSnack({ onDone }: MovementSnackProps) {
         Move {clock.index + 1} of {MOVES.length}
       </p>
       <MoveFigure id={move.id} still={reduce || paused} />
-      <h2 className="stuck__h" aria-live="polite">{move.title}</h2>
+      <H className="stuck__h" aria-live="polite">{move.title}</H>
       <p className="stuck__lede">{seated ? move.seated : move.how}</p>
       <p className="mv__count num" role="timer" aria-label={`${clock.left} seconds left`}>
         {clock.left}

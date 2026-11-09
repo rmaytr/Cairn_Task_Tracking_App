@@ -200,6 +200,7 @@
   align-items: center;
   gap: 6px;
   align-self: center;
+  min-height: 32px; /* at least the 24px target size (WCAG 2.5.8) */
   margin-top: 4px;
   padding: 6px 10px;
   border-radius: var(--radius-xs);

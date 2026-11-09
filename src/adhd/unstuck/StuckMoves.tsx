@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useNow } from '../../hooks'
 import { Icon } from '../../components/Icon'
 import { addDays, todayISO } from '../../lib/dates'
@@ -118,6 +118,7 @@ export function LessBoring({ task }: { task: Task }) {
   const openRoom = useStore((s) => s.openRoom)
   const [treat, setTreat] = useState(false)
   const [picked, setPicked] = useState(false)
+  const treatButton = useRef<HTMLButtonElement>(null)
   return (
     <div className="stuck__move">
       <p className="stuck__lede">Make it a little nicer. Pick one.</p>
@@ -133,14 +134,19 @@ export function LessBoring({ task }: { task: Task }) {
           </button>
         </li>
         <li>
-          <button type="button" className="stuck__choice" aria-expanded={treat} onClick={() => setTreat(true)}>
+          <button type="button" className="stuck__choice" ref={treatButton} aria-expanded={treat} onClick={() => setTreat(true)}>
             <Icon name="gift" size={16} /> Pick a treat for after
           </button>
         </li>
       </ul>
       <p className="stuck__tip">Or change place: a different chair, the library, the kitchen table.</p>
       {treat &&
-        (picked ? <Saved>Treat chosen. Now a short start.</Saved> : <TreatPicker onDone={() => setPicked(true)} />)}
+        (picked ? <Saved>Treat chosen. Now a short start.</Saved> : <TreatPicker
+            onDone={() => {
+              setPicked(true)
+              treatButton.current?.focus() // the picker's Done / Skip goes away
+            }}
+          />)}
     </div>
   )
 }

@@ -29,6 +29,11 @@ export function BlockEnd({ ended, onAnother, onDoneForNow }: BlockEndProps) {
   const [treat, setTreat] = useState(true)
   const [move, setMove] = useState(ended.moveFirst)
   const heading = useRef<HTMLHeadingElement>(null)
+  const treatHeading = useRef<HTMLHeadingElement>(null)
+  const moveHeading = useRef<HTMLHeadingElement>(null)
+  const moveButton = useRef<HTMLButtonElement>(null)
+  const another = useRef<HTMLButtonElement>(null)
+  const swapped = useRef({ treat, move })
   const counted = ended.sessionId !== null
   const compare = counted ? guessText(ended.guessMin, ended.minutes) : null
 
@@ -36,6 +41,13 @@ export function BlockEnd({ ended, onAnother, onDoneForNow }: BlockEndProps) {
   useEffect(() => {
     heading.current?.focus()
   }, [])
+
+  // The treat or the break swapped out the button that was pressed: land on what replaced it.
+  useEffect(() => {
+    if (swapped.current.treat !== treat) treatHeading.current?.focus()
+    else if (swapped.current.move !== move) (move ? moveHeading.current : moveButton.current)?.focus()
+    swapped.current = { treat, move }
+  }, [treat, move])
 
   return (
     <div className="room-end">
@@ -71,19 +83,19 @@ export function BlockEnd({ ended, onAnother, onDoneForNow }: BlockEndProps) {
 
       <div className="room-end__extras">
         <section className="room-panel" aria-labelledby="treat-h">
-          <h3 className="room-panel__title" id="treat-h">
+          <h3 className="room-panel__title" id="treat-h" ref={treatHeading} tabIndex={-1}>
             <Icon name="gift" size={16} /> A small treat
           </h3>
           {treat ? <TreatPicker onDone={() => setTreat(false)} /> : <p className="room-panel__hint">Enjoy it.</p>}
         </section>
         <section className="room-panel" aria-labelledby="move-h">
-          <h3 className="room-panel__title" id="move-h">
+          <h3 className="room-panel__title" id="move-h" ref={moveHeading} tabIndex={-1}>
             <Icon name="walk" size={16} /> Move break
           </h3>
           {move ? (
-            <MovementSnack onDone={() => setMove(false)} />
+            <MovementSnack headingLevel={4} onDone={() => setMove(false)} />
           ) : (
-            <button type="button" className="btn" onClick={() => setMove(true)}>
+            <button type="button" className="btn" ref={moveButton} onClick={() => setMove(true)}>
               Ninety seconds of moving
             </button>
           )}
@@ -91,14 +103,21 @@ export function BlockEnd({ ended, onAnother, onDoneForNow }: BlockEndProps) {
       </div>
 
       <div className="room-end__actions">
-        <button type="button" className="btn btn--primary btn--lg" onClick={onAnother}>
+        <button type="button" className="btn btn--primary btn--lg" ref={another} onClick={onAnother}>
           <Icon name="play" size={18} /> Another block
         </button>
         <button type="button" className="btn btn--lg" onClick={onDoneForNow}>
           Done for now
         </button>
         {taskOpen && (
-          <button type="button" className="btn btn--ghost btn--lg" onClick={() => setDone(ended.taskId, true)}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--lg"
+            onClick={() => {
+              setDone(ended.taskId, true)
+              another.current?.focus() // this button goes away
+            }}
+          >
             <Icon name="check" size={18} /> Mark “{ended.title}” done
           </button>
         )}

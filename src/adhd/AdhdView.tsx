@@ -15,7 +15,11 @@ import './AdhdView.css'
 
 function ToolPage({ tool }: { tool: AdhdTool }): ReactNode {
   const navigate = useStore((s) => s.navigate)
-  const back = (): void => navigate({ view: 'adhd', tool: null })
+  const back = (): void => {
+    navigate({ view: 'adhd', tool: null })
+    // The break's buttons are gone with the page; land on the hub's title.
+    requestAnimationFrame(() => document.getElementById('adhd-title')?.focus())
+  }
   switch (tool) {
     case 'room':
       return <FocusRoom />
@@ -53,7 +57,7 @@ export function AdhdView() {
           <Icon name="chevron" size={16} /> ADHD toolkit
         </button>
       </div>
-      <h1 className="adhd__title" id="adhd-tool-title">
+      <h1 className="adhd__title" id="adhd-tool-title" tabIndex={-1}>
         <Icon name={info.icon} size={24} /> {info.label}
       </h1>
       <ToolPage tool={tool} />
