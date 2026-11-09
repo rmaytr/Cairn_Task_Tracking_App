@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/ci.yml)
 [![Deploy](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml/badge.svg)](https://github.com/rmaytr/Cairn_Task_Tracking_App/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-846%20unit%20%C2%B7%2033%20e2e-1b6e66)
+![Tests](https://img.shields.io/badge/tests-1208%20unit%20%C2%B7%2044%20e2e-1b6e66)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline-5a0fc8?logo=pwa&logoColor=white)
@@ -104,7 +104,7 @@ A greeting set in a serif face and, under it, the one fact that matters today, w
 - **Dates you can read.** Every date shows its weekday and day ("Fri, Oct 23"), coloured by how
   close it is. A calendar with quick picks sets it.
 - **Snooze.** One day later, or one step out (Today → This week → …) for undated tasks.
-- **Sort** by smart order, due date or priority; reverse it; search titles, notes and steps.
+- **Sort** by smart order, **My order** (set by dragging), due date or priority; reverse it; search titles, notes and steps.
 - **Repeating tasks**, **steps** inside tasks, and a three-minute **weekly reset**.
 - **Reminders** the evening before and the morning of a deadline (system notifications where allowed).
 
@@ -123,9 +123,68 @@ A greeting set in a serif face and, under it, the one fact that matters today, w
 
 - **Areas:** the ⋯ next to an area (or right-click) adds a task there, renames it in place,
   recolours, reorders or deletes it.
-- **Drag** a task onto an area or onto *Today* in the sidebar to move it.
 - **On a phone, swipe** a task right to finish it or left to snooze it.
 - **Undo** for everything destructive.
+
+### Brain dump
+
+Paste or type a list and Cairn turns it into tasks in one go. The capture box grows as you type;
+Enter adds, Shift+Enter starts a new line.
+
+- Bullets, numbers, `- [ ]` checkboxes or semicolon-separated items show a preview: one row per task,
+  each with its guessed area, date and priority. Drop a row with × and press Enter to add the rest.
+  One Undo covers the whole batch.
+- One long sentence with several things ("call mom, buy milk and finish the essay") shows
+  **Looks like 3 tasks · Split**, so splitting takes one click.
+- While you type, Cairn points out near-duplicates ("You already have *Call the bank* · Open"),
+  reads `every Monday` as a weekly repeat and `15 min` or `2h` as effort.
+- With the assistant on, the AI sorter handles up to 12 lines per paste and can split items further.
+
+### Drag to reorder
+
+- Choose **My order** to arrange tasks yourself. Drag a row by its handle (or long-press it on a
+  phone) to move it. Dragging in another sort switches to My order and keeps the order you saw.
+- On an area's page, drag between **Today**, **This week** and **Later** to change when a task is due.
+- Keyboard: **Alt+↑ / Alt+↓** moves the focused task or step, and screen readers hear each move.
+- Steps inside a task reorder by drag too. The task menu also has **Move up** and **Move down**.
+
+### Command palette
+
+**⌘K** or **Ctrl K** opens one box for tasks, places (Today, areas, Lock in) and actions (New task,
+Settings, Theme, Shortcuts and more). It guesses what you mean:
+
+| You type | Cairn does |
+| --- | --- |
+| `done laundry` | Marks *Do laundry* done |
+| `essay friday` | Sets *Essay* due on Friday |
+| `move essay to Classes` | Moves *Essay* to the Classes area |
+| `Call mom` | Adds it as a task |
+| `Settings` or a task's name | Opens it |
+
+The best guess sits at the top, and Enter runs it. Changes can be undone from the toast. Press `?`
+for the shortcuts sheet.
+
+### Lock in and time helpers
+
+- **Lock in timer:** 5, 15 or 25 minutes, with a ring that shows when it ends ("until 3:40") and a
+  pause button. An optional soft chime marks the end. Time spent is added to the task, and the timer
+  keeps running when you move to another screen.
+- **Lock in start:** pick **Any**, **Quick wins** (20 minutes or less) or **Big push** (large tasks).
+- **Fresh start:** when two or more tasks are overdue, Home shows one card with *Move all to today*,
+  *Spread over this week* and *Not now* (someday). Undo is available.
+- **Done today:** under the cairn on Home, a list of what you finished today.
+- **Finish feedback:** an optional soft sound and phone vibration when you finish a task. Both are
+  set in Settings.
+- **Stuck nudge:** a task snoozed 3 times offers **Make it smaller** in its detail.
+
+### Look and feel
+
+- **Seven themes:** Stone (the light default), Notes (warm cream paper with a golden accent), Moss
+  (calm green), Contrast (high contrast), Night (dark), Dusk (dark plum) and Ink (true black for OLED
+  screens). Settings → Appearance shows a live preview of each.
+- **Match system** is the default: Stone by day, Night by night. The browser's theme colour follows
+  the theme you pick.
+- **Text size:** Default, Large or Larger.
 
 ### Three ways to see it all
 
@@ -164,17 +223,19 @@ tasks are sent; notes and steps never leave your device.
 ### Also
 
 Import from plain text, Markdown checklists (including Obsidian Tasks dates), JSON or Todoist CSV, and
-back up to JSON or Markdown. Seven themes (warm Notes paper, plum Dusk, OLED Ink, high Contrast and more) and three text sizes, keyboard shortcuts, installable, fully offline.
+back up to JSON or Markdown. Installable and fully offline.
 
 | Key | Action |
 | --- | --- |
 | `/` or `n` | Add a task |
-| `Ctrl K` | Find any task |
+| `⌘K` / `Ctrl K` | Command palette: find, act or add |
+| `Enter` / `Shift+Enter` | Add the task (or tasks) / new line in the capture box |
+| `Alt+↑` / `Alt+↓` | Move the focused task or step |
 | `1` `2` `3` | Today, All tasks, Lock in |
 | `i` | Import |
 | `z` | Undo |
 | `Esc` | Close the open task, menu or dialog |
-| `?` | Settings and shortcuts |
+| `?` | Shortcuts sheet |
 
 ---
 
@@ -261,7 +322,7 @@ More diagrams (data model, planner, reminders, sync) are in
 | --- | --- |
 | Application code | ~12,100 lines of TypeScript in 139 files |
 | Styles | ~5,200 lines of hand-written CSS, seven contrast-tested themes |
-| Automated tests | **846** unit and integration tests · **33** end-to-end tests |
+| Automated tests | **1208** unit and integration tests · **44** end-to-end tests |
 | Runtime dependencies | 10 |
 | AI cost per captured task | ≈ $0.001 (Claude Haiku 5.5) |
 
@@ -337,7 +398,7 @@ Everything works without configuration. To turn on sync or the shared assistant,
 
 ```mermaid
 flowchart LR
-  P[Push to main] --> T[Type-check] --> L[Lint] --> U["846 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
+  P[Push to main] --> T[Type-check] --> L[Lint] --> U["1208 unit tests"] --> B[Build] --> D[Deploy to GitHub Pages]
 ```
 
 - **Unit and integration (Vitest):**

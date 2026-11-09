@@ -2,6 +2,22 @@
 
 All notable changes, newest first. The project follows [Conventional Commits](https://www.conventionalcommits.org/).
 
+## 5.0 — Make it yours
+
+- Seven themes: Stone, Notes (warm paper), Moss, Contrast, Night, Dusk, Ink; Match system; three
+  text sizes. Every theme is contrast-tested (text 4.5:1, controls and focus 3:1).
+- Brain dump: the capture box grows; paste or type a list and each line becomes a task (one Undo).
+  One sentence with several things offers *Split*. Near-duplicates are pointed out. "every Monday"
+  repeats, "15 min" sets the size. The assistant sorts up to 12 lines per paste.
+- Drag to reorder (mouse, touch long-press, Alt+↑/↓, or *Move up/down* in the ⋯ menu) with a saved
+  *My order* sort; drag between Today / This week / Later on an area page; reorder steps.
+- ⌘K / Ctrl K command palette that guesses what you mean: "done laundry", "essay friday",
+  "move essay to Classes", a search opens the task, anything else adds it. `?` shows shortcuts.
+- Lock in: 5/15/25-minute timer that keeps running across views and adds the time to the task;
+  *Quick wins* / *Big push* filter.
+- Today: *Fresh start* for a pile of overdue tasks, a *Done today* list, optional finish sound and
+  haptics, and a nudge to make a task smaller after three snoozes.
+
 ## 4.1 — Quick actions
 
 - ⋯ menu (and right-click) on every area: add a task there, rename in place, recolour, move up or

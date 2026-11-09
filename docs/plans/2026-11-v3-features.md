@@ -1,6 +1,20 @@
 # Cairn v3: themes, brain dump, drag, palette, ADHD helpers
 
-Date: 2026-11-09. Owner: Rodion. Status: in progress.
+Date: 2026-11-09. Owner: Rodion. Status: shipped on branch v3-features.
+
+## What shipped
+
+- Seven themes (Stone, Notes, Moss, Contrast, Night, Dusk, Ink), a Match system default, and text sizes.
+- Brain-dump capture: multi-line capture box, list preview with a per-line ×, Split suggestion,
+  near-duplicate hint, repeat and effort words. The AI sorter handles up to 12 lines per paste.
+- Drag to reorder with a persistent "My order" sort, drag between "when" groups on area pages,
+  Alt+↑/↓, Move up/down in the task menu, and drag reorder for steps.
+- Command palette (⌘K / Ctrl+K) that guesses intent, with Undo, and a "?" shortcuts sheet.
+- Lock-in timer (5, 15 or 25 minutes) that survives navigation and credits time to the task.
+  Quick wins and Big push filters for Lock in start.
+- Home "Fresh start" for overdue tasks and a "Done today" list.
+- Optional finish sound and haptics, set in Settings.
+- "Snoozed 3 times" nudge that offers "Make it smaller".
 
 ## Why
 
