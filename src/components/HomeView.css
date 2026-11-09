@@ -97,8 +97,7 @@
 }
 
 .home__count-cell:focus-visible {
-  outline: none;
-  box-shadow: inset var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .home__count-cell dt {
@@ -261,8 +260,7 @@
 }
 
 .next__title:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .next__step {

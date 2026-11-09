@@ -26,8 +26,7 @@
 }
 
 .brand:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .brand__name {
@@ -71,8 +70,7 @@
 }
 
 .side__find:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .side__nav,
@@ -108,8 +106,7 @@
 }
 
 .side__link:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .side__link[aria-current='page'],
@@ -163,8 +160,7 @@
 }
 
 .side__area:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .side__area-dot {
@@ -230,8 +226,7 @@
 }
 
 .side__dots:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .side__area-item:hover .side__dots,
