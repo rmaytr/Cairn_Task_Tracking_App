@@ -3,7 +3,7 @@ import { THEMES, type ThemeId } from '../model/themes'
 import { parseDateToken } from './dates'
 
 /** Where "go to" can land: a view, the settings dialog, or `area:<id>`. */
-export type GoTarget = 'home' | 'tasks' | 'focus' | 'reset' | 'settings' | `area:${string}`
+export type GoTarget = 'home' | 'tasks' | 'focus' | 'reset' | 'adhd' | 'settings' | `area:${string}`
 
 export type ActionId = 'new-task' | 'new-area' | 'import' | 'settings' | 'reset' | 'shortcuts' | 'theme' | 'dark-mode' | 'light-mode'
 
@@ -41,6 +41,7 @@ const GO_WORDS: Record<Exclude<GoTarget, `area:${string}`>, readonly string[]> =
   tasks: ['tasks', 'all tasks'],
   focus: ['lock in', 'lockin', 'focus'],
   reset: ['weekly reset', 'reset'],
+  adhd: ['adhd', 'adhd toolkit', 'toolkit'],
   settings: ['settings', 'preferences'],
 }
 

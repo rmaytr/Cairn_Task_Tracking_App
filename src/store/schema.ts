@@ -3,6 +3,7 @@ import { DEFAULT_AREAS } from '../model/defaults'
 import { AREA_COLORS, HORIZONS, REPEATS, type Area, type Task, type Tombstone } from '../model/types'
 import { openProxy } from '../assist/config'
 import { TEXT_SIZES, THEME_PREFS } from '../model/themes'
+import { DEFAULT_ADHD, MAX_SESSIONS, MAX_TREAT_LENGTH, MAX_TREATS, NOISE_KINDS, PLAYBOOK_MARKS, type FocusSession, type PlaybookMark } from '../adhd/types'
 
 /** Themes used to be just light/dark; those map to Stone and Night. */
 const LEGACY_THEMES: Record<string, string> = { light: 'stone', dark: 'night' }
@@ -48,6 +49,53 @@ export const areaSchema = z.object({
 
 export const tombstoneSchema = z.object({ id: z.string(), kind: z.enum(['task', 'area']), at: z.number() })
 
+export const focusSessionSchema = z.object({
+  id: z.string().max(64),
+  taskId: z.string().max(64).nullable().catch(null),
+  title: z.string().catch('').transform((t) => t.slice(0, 200)),
+  at: z.number(),
+  guessMin: z.number().min(1).max(600).nullable().catch(null),
+  actualMin: z.number().min(0).max(1440),
+  sound: z.enum([...NOISE_KINDS, 'none']).catch('none'),
+  companion: z.boolean().catch(false),
+  rating: z.number().int().min(1).max(5).nullable().catch(null),
+})
+
+/** ADHD toolkit state. Each field falls back on its own, and one bad session never drops the rest. */
+export const adhdSchema = z
+  .object({
+    sound: z
+      .object({ kind: z.enum(NOISE_KINDS), volume: z.number().min(0).max(1) })
+      .catch(DEFAULT_ADHD.sound),
+    companion: z.boolean().catch(DEFAULT_ADHD.companion),
+    sessions: z
+      .array(z.unknown())
+      .catch([])
+      .transform((items): FocusSession[] =>
+        items.flatMap((item) => {
+          const parsed = focusSessionSchema.safeParse(item)
+          return parsed.success ? [parsed.data] : []
+        }).slice(-MAX_SESSIONS),
+      ),
+    treats: z
+      .array(z.unknown())
+      .catch([...DEFAULT_ADHD.treats])
+      .transform((list) =>
+        list.flatMap((t) => (typeof t === 'string' ? [t.trim().slice(0, MAX_TREAT_LENGTH)] : [])).filter(Boolean).slice(0, MAX_TREATS),
+      ),
+    playbook: z
+      .record(z.string(), z.unknown())
+      .catch({})
+      .transform((marks) =>
+        Object.fromEntries(
+          Object.entries(marks).filter(
+            (entry): entry is [string, PlaybookMark] => entry[0].length <= 64 && (PLAYBOOK_MARKS as readonly unknown[]).includes(entry[1]),
+          ),
+        ),
+      ),
+  })
+  .catch(DEFAULT_ADHD)
+
 export const prefsSchema = z.object({
   theme: z.preprocess((v) => (typeof v === 'string' ? (LEGACY_THEMES[v] ?? v) : v), z.enum(THEME_PREFS)).catch('system'),
   textSize: z.enum(TEXT_SIZES).catch('default'),
@@ -78,6 +126,8 @@ export const prefsSchema = z.object({
   listSort: z
     .object({ sort: z.enum(LIST_SORTS), reverse: z.boolean() })
     .catch({ sort: 'smart', reverse: false }),
+  /** ADHD toolkit: sound choice, Focus room history, reward menu, playbook. Device-only, never synced. */
+  adhd: adhdSchema,
 })
 
 export type Prefs = z.infer<typeof prefsSchema>
@@ -96,6 +146,7 @@ export const DEFAULT_PREFS: Prefs = {
   feedback: { sound: false, haptics: true },
   dayPlan: null,
   listSort: { sort: 'smart', reverse: false },
+  adhd: DEFAULT_ADHD,
 }
 
 export interface PersistedState {

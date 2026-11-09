@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { DEFAULT_ADHD, MAX_SESSIONS, type AdhdPrefs, type AdhdTool, type FocusSession } from '../adhd/types'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { formatDue, horizonForDue, nearerHorizon } from '../lib/dates'
 import { newId } from '../lib/ids'
@@ -92,6 +93,10 @@ interface UiState {
   focusTaskId: string | null
   /** The one running Lock-in timer; lives here (never persisted) so it survives leaving the view. */
   focusTimer: { taskId: string; timer: FocusTimer } | null
+  /** ADHD toolkit page (#adhd/<tool>); null is the hub. */
+  adhdTool: AdhdTool | null
+  /** Task the Focus room opens on; null lets the room pick (Up next). */
+  roomTaskId: string | null
   sync: SyncInfo
 }
 
@@ -156,6 +161,14 @@ interface Actions {
   updateFocusTimer: (timer: FocusTimer) => void
   /** Stops the timer and adds the minutes worked to its task's spentMinutes, once. */
   endFocusTimer: (now?: number) => void
+  /** Merges into prefs.adhd (sound, companion, treats, playbook). */
+  setAdhd: (patch: Partial<AdhdPrefs>) => void
+  /** Records a finished Focus room block (oldest dropped past MAX_SESSIONS); returns its id. */
+  logSession: (session: Omit<FocusSession, 'id'>) => string
+  /** Sets or clears the "how was your focus?" rating of a logged block. */
+  rateSession: (id: string, rating: number | null) => void
+  /** Opens the Focus room on a task (null: let the room pick). */
+  openRoom: (taskId: string | null) => void
 }
 
 export type StoreState = PersistedState & UiState & Actions
@@ -189,8 +202,8 @@ function initialRoute(): Route {
   return typeof location === 'undefined' ? parseHash('') : parseHash(location.hash)
 }
 
-export const currentHash = (s: Pick<StoreState, 'view' | 'tasksMode' | 'areaFilter'>): string =>
-  routeToHash({ view: s.view, mode: s.tasksMode, area: s.areaFilter })
+export const currentHash = (s: Pick<StoreState, 'view' | 'tasksMode' | 'areaFilter' | 'adhdTool'>): string =>
+  routeToHash({ view: s.view, mode: s.tasksMode, area: s.areaFilter, tool: s.adhdTool })
 
 export const useStore = create<StoreState>()(
   persist(
@@ -246,6 +259,8 @@ export const useStore = create<StoreState>()(
         shortcutsOpen: false,
         focusTaskId: null,
         focusTimer: null,
+        adhdTool: initialRoute().tool ?? null,
+        roomTaskId: null,
         sync: { status: 'off', email: null, lastSyncedAt: null, message: null, vault: 'unknown' },
 
         addTask: (draft, areaId, fallback = 'week') => {
@@ -457,7 +472,8 @@ export const useStore = create<StoreState>()(
             undoSnapshot: null,
             toast: null,
             lastCompleted: null,
-            prefs: { ...s.prefs, hiddenAreas: [] },
+            // Focus history holds task titles; a shared computer shouldn't keep them.
+            prefs: { ...s.prefs, hiddenAreas: [], adhd: { ...DEFAULT_ADHD, sound: s.prefs.adhd.sound } },
           })),
 
         applySynced: (doc) =>
@@ -508,6 +524,8 @@ export const useStore = create<StoreState>()(
               view,
               tasksMode: to.mode ?? s.tasksMode,
               areaFilter: to.area !== undefined ? to.area : view === 'tasks' ? s.areaFilter : null,
+              // Going to the toolkit without naming a tool lands on its hub.
+              adhdTool: view === 'adhd' ? (to.tool ?? null) : null,
               selectedId: view === 'focus' || view === 'reset' ? null : s.selectedId,
               toast: s.toast?.undoable || s.toast?.sticky ? s.toast : null,
             }
@@ -558,6 +576,25 @@ export const useStore = create<StoreState>()(
         },
         select: (id) => set({ selectedId: id }),
         setPrefs: (patch) => set((s) => ({ prefs: { ...s.prefs, ...patch } })),
+        setAdhd: (patch) => set((s) => ({ prefs: { ...s.prefs, adhd: { ...s.prefs.adhd, ...patch } } })),
+        logSession: (session) => {
+          const id = newId()
+          set((s) => ({
+            prefs: { ...s.prefs, adhd: { ...s.prefs.adhd, sessions: [...s.prefs.adhd.sessions, { ...session, id }].slice(-MAX_SESSIONS) } },
+          }))
+          return id
+        },
+        openRoom: (taskId) => {
+          set({ roomTaskId: taskId, selectedId: null })
+          get().navigate({ view: 'adhd', tool: 'room' })
+        },
+        rateSession: (id, rating) =>
+          set((s) => ({
+            prefs: {
+              ...s.prefs,
+              adhd: { ...s.prefs.adhd, sessions: s.prefs.adhd.sessions.map((x) => (x.id === id ? { ...x, rating } : x)) },
+            },
+          })),
         setImportOpen: (open) => set({ importOpen: open }),
         setSettingsOpen: (open) => set({ settingsOpen: open }),
         setNewAreaOpen: (open) => set({ newAreaOpen: open }),

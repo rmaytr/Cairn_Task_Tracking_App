@@ -58,6 +58,7 @@ function DetailBody({ task }: { task: Task }) {
   const deleteTask = useStore((s) => s.deleteTask)
   const select = useStore((s) => s.select)
   const startFocus = useStore((s) => s.startFocus)
+  const openRoom = useStore((s) => s.openRoom)
   const area = useAreaMap().get(task.areaId)
   const now = useNow()
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -65,6 +66,7 @@ function DetailBody({ task }: { task: Task }) {
   const [editor, setEditor] = useState<Editor>(null)
   const [showWaiting, setShowWaiting] = useState(false)
   const [showAfter, setShowAfter] = useState(false)
+  const [showPlan, setShowPlan] = useState(false)
   // Re-sync the draft when the stored title changes underneath us (e.g. Undo).
   const [syncedTitle, setSyncedTitle] = useState(task.title)
   if (syncedTitle !== task.title) {
@@ -101,6 +103,7 @@ function DetailBody({ task }: { task: Task }) {
   const repeats = Boolean(task.repeat && task.repeat !== 'none')
   const waiting = showWaiting || task.waiting !== null
   const after = showAfter || (task.after?.length ?? 0) > 0
+  const planned = showPlan || task.plan !== null
 
   return (
     <div className="detail__inner" style={areaStyle(area)}>
@@ -242,8 +245,38 @@ function DetailBody({ task }: { task: Task }) {
         </div>
       )}
       {after && <AfterField task={task} onEmpty={() => setShowAfter(false)} />}
+      {planned && (
+        <div className="detail__extra">
+          <Icon name="flag" size={16} />
+          <input
+            className="detail__extra-input"
+            value={task.plan ?? ''}
+            placeholder="When ___, I will ___ (e.g. after lunch, I'll open the doc)"
+            aria-label="If-then plan"
+            autoFocus={showPlan && task.plan === null}
+            // Keep the field mounted while it is being edited, even once it's cleared.
+            onFocus={() => setShowPlan(true)}
+            onChange={(e) => {
+              setShowPlan(true)
+              updateTask(task.id, { plan: e.target.value || null })
+            }}
+            maxLength={300}
+          />
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Remove the plan"
+            onClick={() => {
+              updateTask(task.id, { plan: null })
+              setShowPlan(false)
+            }}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        </div>
+      )}
 
-      {!(repeats && waiting && after) && (
+      {!(repeats && waiting && after && planned) && (
         <div className="detail__add" role="group" aria-label="Add">
           {!repeats && editor !== 'repeat' && (
             <button type="button" className="detail__add-btn" onClick={() => setEditor('repeat')}>
@@ -258,6 +291,11 @@ function DetailBody({ task }: { task: Task }) {
           {!after && (
             <button type="button" className="detail__add-btn" onClick={() => setShowAfter(true)}>
               <Icon name="link" size={15} /> After another task
+            </button>
+          )}
+          {!planned && (
+            <button type="button" className="detail__add-btn" onClick={() => setShowPlan(true)}>
+              <Icon name="flag" size={15} /> When I'll do it
             </button>
           )}
         </div>
@@ -286,6 +324,11 @@ function DetailBody({ task }: { task: Task }) {
         {!task.done && (
           <button type="button" className="btn" onClick={() => startFocus(task.id)}>
             <Icon name="target" size={18} /> Lock in
+          </button>
+        )}
+        {!task.done && (
+          <button type="button" className="btn" onClick={() => openRoom(task.id)}>
+            <Icon name="door" size={18} /> Focus room
           </button>
         )}
         <span className="detail__spacer" />

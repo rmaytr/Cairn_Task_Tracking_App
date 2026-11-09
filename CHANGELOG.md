@@ -2,6 +2,18 @@
 
 All notable changes, newest first. The project follows [Conventional Commits](https://www.conventionalcommits.org/).
 
+## 5.1 — ADHD toolkit
+
+- New *ADHD toolkit* section (key `4`): Focus room, I'm stuck, Focus sounds, Time sense, Reward
+  menu, Move break and What works, shaped by a research review and fact-checked against the sources.
+- Focus room: one task, a guess-then-timer, sound, a quiet companion, *Park it*, a hyperfocus
+  check-in, and a rating at the end that feeds your personal patterns.
+- Focus sounds made with Web Audio (white, pink, brown, rain), with your own with-vs-without test.
+- Time sense learns your personal guess ratio and pads new estimates.
+- Tasks get an optional if-then plan (*When I'll do it*); the task panel and Lock in open the room.
+- Toolkit data (sessions, rewards, playbook) stays on the device and is cleared by *sign out and
+  wipe*.
+
 ## 5.0 — Make it yours
 
 - Seven themes: Stone, Notes (warm paper), Moss, Contrast, Night, Dusk, Ink; Match system; three

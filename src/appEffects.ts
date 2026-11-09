@@ -5,7 +5,7 @@ import { useMediaQuery } from './hooks'
 import { chime, tock } from './lib/feedback'
 import { THEMES, resolveTheme } from './model/themes'
 import { onStorageError } from './store/persist'
-import { parseHash } from './route'
+import { parseHash, routeToHash } from './route'
 import { currentHash, useStore, type View } from './store/useStore'
 
 export const VIEW_TITLE: Record<View, string> = {
@@ -13,9 +13,10 @@ export const VIEW_TITLE: Record<View, string> = {
   tasks: 'Tasks',
   focus: 'Lock in',
   reset: 'Weekly reset',
+  adhd: 'ADHD toolkit',
 }
 
-const SHORTCUT_VIEWS: readonly View[] = ['home', 'tasks', 'focus']
+const SHORTCUT_VIEWS: readonly View[] = ['home', 'tasks', 'focus', 'adhd']
 
 /** index.html's inline script reads this before first paint, so a chosen theme doesn't flash. */
 const APPEARANCE_KEY = 'cairn-appearance'
@@ -98,8 +99,10 @@ export function useHashView(): void {
   useEffect(() => {
     document.title = `${areaName ?? VIEW_TITLE[view]} · Cairn`
     if (location.hash === hash) return
-    if (location.hash) history.pushState(null, '', hash)
-    else history.replaceState(null, '', hash)
+    // A hash that only needs correcting (#adhd/bogus → #adhd) is replaced, so Back doesn't land on it again.
+    const correcting = !location.hash || routeToHash(parseHash(location.hash)) === hash
+    if (correcting) history.replaceState(null, '', hash)
+    else history.pushState(null, '', hash)
   }, [hash, view, areaName])
 }
 

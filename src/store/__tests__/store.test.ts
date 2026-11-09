@@ -163,6 +163,16 @@ describe('sanitizePersisted', () => {
     expect(result.tasks[1]).toMatchObject({ horizon: 'later', due: null })
   })
 
+  it('keeps the ADHD lists when one entry is bad, and trims long session titles instead of wiping them', () => {
+    const session = { id: 's1', taskId: null, title: 'x'.repeat(250), at: 1, guessMin: null, actualMin: 5, sound: 'none', companion: false, rating: null }
+    const { adhd } = sanitizePersisted({
+      prefs: { adhd: { treats: ['Tea', 42, null, ' Walk '], playbook: { noise: 'try', bad: 'maybe', walk: 'helps' }, sessions: [session] } },
+    }).prefs
+    expect(adhd.treats).toEqual(['Tea', 'Walk'])
+    expect(adhd.playbook).toEqual({ noise: 'try', walk: 'helps' })
+    expect(adhd.sessions[0]!.title).toBe('x'.repeat(200))
+  })
+
   it('un-hides areas hidden by the old sidebar, which has no way to show them again', () => {
     const result = sanitizePersisted({ prefs: { hiddenAreas: ['classes', 'life'] } })
     expect(result.prefs.hiddenAreas).toEqual([])

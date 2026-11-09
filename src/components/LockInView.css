@@ -194,3 +194,21 @@
   margin-top: 6px;
   justify-content: center;
 }
+
+.now__room {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  min-height: 32px; /* at least the 24px target size (WCAG 2.5.8) */
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.now__room:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}

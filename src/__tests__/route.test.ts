@@ -11,6 +11,8 @@ describe('route', () => {
       { view: 'tasks', mode: 'map', area: null },
       { view: 'tasks', mode: 'radar', area: 'classes' },
       { view: 'tasks', mode: 'list', area: 'a b/c' },
+      { view: 'adhd', mode: 'list', area: null, tool: null },
+      { view: 'adhd', mode: 'list', area: null, tool: 'sounds' },
     ]
     for (const r of routes) expect(parseHash(routeToHash(r))).toEqual(r)
   })
@@ -19,6 +21,7 @@ describe('route', () => {
     expect(parseHash('')).toEqual(HOME)
     expect(parseHash('#nope')).toEqual(HOME)
     expect(parseHash('#radar')).toEqual({ view: 'tasks', mode: 'radar', area: null })
+    expect(parseHash('#adhd/bogus')).toEqual({ view: 'adhd', mode: 'list', area: null, tool: null })
     expect(parseHash('#tasks/bogus')).toEqual({ view: 'tasks', mode: 'list', area: null })
   })
 
