@@ -4,6 +4,19 @@ import { makeArea, makeDoc, makeTask } from './fixtures'
 
 const EMPTY = { v: 1, areas: [], tasks: [], tombstones: [] }
 
+describe('forward compatibility', () => {
+  it('keeps task fields this version does not know about', () => {
+    const raw = { ...makeDoc({}), tasks: [{ ...makeTask('t1'), futureField: { a: 1 } }] }
+    const [task] = parseSyncDoc(JSON.parse(JSON.stringify(raw))).tasks
+    expect((task as unknown as Record<string, unknown>).futureField).toEqual({ a: 1 })
+  })
+
+  it('still drops undefined optionals', () => {
+    const [task] = parseSyncDoc({ ...makeDoc({}), tasks: [{ ...makeTask('t1'), low: 'nope' }] }).tasks
+    expect('low' in (task as object)).toBe(false)
+  })
+})
+
 describe('parseSyncDoc', () => {
   it('round-trips a valid document, keeping area.updatedAt and task.repeat', () => {
     const doc = makeDoc({

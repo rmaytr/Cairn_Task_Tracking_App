@@ -52,6 +52,10 @@ const PAIRS: readonly [string, string, number][] = [
   ['--on-action', '--action', 4.5],
   ['--on-primary', '--primary', 4.5],
   ['--primary', '--surface', 4.5],
+  // Non-text contrast (WCAG 1.4.11): control borders and the focus ring.
+  ['--field-border', '--canvas', 3],
+  ['--field-border', '--surface', 3],
+  ['--primary', '--canvas', 3],
   ['--primary-soft-ink', '--primary-soft', 4.5],
   ['--sun-ink', '--sun-soft', 4.5],
   ['--danger', '--surface', 4.5],

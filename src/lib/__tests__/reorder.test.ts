@@ -62,6 +62,29 @@ describe('rerank', () => {
     expect(ranks[1]).toBeLessThan(ranks[2])
   })
 
+  it('leaves ranked tasks alone when new unranked tasks join a drag', () => {
+    // a,b,c are ranked; n1, n2 are new tasks without a rank; the user drags c above b.
+    const order = [
+      { id: 'a', rank: 0 },
+      { id: 'n1' },
+      { id: 'c', rank: 2048 },
+      { id: 'b', rank: 1024 },
+      { id: 'n2' },
+    ]
+    const changes = rerank(order, 'c')
+    expect([...changes.keys()].sort()).toEqual(['c', 'n1', 'n2'])
+    const rank = (id: string): number => changes.get(id) ?? (order.find((i) => i.id === id)!.rank as number)
+    const ranks = order.map((i) => rank(i.id))
+    expect(ranks.every((r, i) => i === 0 || r > ranks[i - 1]!)).toBe(true)
+  })
+
+  it('only gives unranked tasks a rank when the moved task already fits', () => {
+    const changes = rerank([{ id: 'a', rank: 0 }, { id: 'n' }, { id: 'b', rank: 10 }], 'a')
+    expect([...changes.keys()]).toEqual(['n'])
+    expect(changes.get('n')).toBeGreaterThan(0)
+    expect(changes.get('n')).toBeLessThan(10)
+  })
+
   it('stamps the order the user saw when old ranks disagree with it', () => {
     const changes = rerank(
       [

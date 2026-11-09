@@ -15,7 +15,7 @@ const stepSchema = z.object({ id: z.string(), title: z.string(), done: z.boolean
 
 // Mirrors src/store/schema.ts (not exported there), plus the optional `repeat` field.
 const taskSchema = z
-  .object({
+  .looseObject({
     id: z.string(),
     title: z.string(),
     notes: z.string().catch(''),

@@ -12,7 +12,8 @@ export const LIST_SORTS = ['smart', 'due', 'priority', 'manual'] as const
 
 const stepSchema = z.object({ id: z.string(), title: z.string(), done: z.boolean() })
 
-export const taskSchema = z.object({
+// Loose: an older client must keep fields a newer one added, not strip them and sync that away.
+export const taskSchema = z.looseObject({
   id: z.string(),
   title: z.string(),
   notes: z.string().catch(''),
