@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { sideButton, startEmpty } from './helpers'
+import { expectPersisted, sideButton, startEmpty } from './helpers'
 
 test.describe('appearance', () => {
   test('a theme card applies the theme, arrow keys move between cards, and it survives a reload', async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('appearance', () => {
     const themes = dialog.getByRole('group', { name: 'Theme' })
     await expect(themes.getByRole('radio', { name: 'Match system' })).toBeChecked()
 
-    await themes.getByRole('radio', { name: 'Notes' }).check()
+    await themes.getByRole('radio', { name: 'Notes' }).check({ force: true }) // the native radio is visually hidden inside its card
     await expect(html).toHaveAttribute('data-theme', 'notes')
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#f4efe4')
 
@@ -23,6 +23,7 @@ test.describe('appearance', () => {
     await dialog.getByRole('button', { name: 'Larger' }).click()
     await expect(html).toHaveAttribute('data-text-size', 'larger')
 
+    await expectPersisted(page, '"textSize":"larger"')
     await page.reload()
     await expect(html).toHaveAttribute('data-theme', 'moss')
     await expect(html).toHaveAttribute('data-text-size', 'larger')

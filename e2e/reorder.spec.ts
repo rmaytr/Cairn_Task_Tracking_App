@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { loadSample, taskButton, toast } from './helpers'
+import { expectPersisted, loadSample, taskButton } from './helpers'
 
 const classesTitles = (page: Page) => page.locator('.list__group').first().locator('.trow__title').allTextContents()
 
@@ -11,11 +11,12 @@ test.describe('reorder', () => {
     await taskButton(page, first!).focus()
     await page.keyboard.press('Alt+ArrowDown')
 
-    await expect(toast(page)).toContainText('Switched to My order')
+    await expect(page.locator('.toast', { hasText: 'Switched to My order' })).toBeVisible()
     await expect(page.locator('.tasks__sort select')).toHaveValue('manual')
     expect((await classesTitles(page)).slice(0, 2)).toEqual([second, first])
     await expect(taskButton(page, first!)).toBeFocused()
 
+    await expectPersisted(page, '"sort":"manual"')
     await page.reload()
     await expect(page.locator('.tasks__sort select')).toHaveValue('manual')
     expect((await classesTitles(page)).slice(0, 2)).toEqual([second, first])

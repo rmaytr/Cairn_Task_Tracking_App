@@ -210,14 +210,17 @@ test.describe('command palette', () => {
     await expect(palette.getByRole('option').first()).toContainText('Add ‘call mom’')
     await input.press('Enter')
     await expect(palette).toBeHidden()
-    await expect(taskButton(page, 'call mom')).toBeVisible()
+    await expect(toast(page).last()).toContainText('Added to')
+    await expect(page.locator('.home').getByRole('button', { name: 'call mom', exact: true })).toBeVisible()
 
     await page.keyboard.press('Control+k')
     await input.fill('done laundry')
     await expect(palette.getByRole('option').first()).toContainText('Mark ‘Do laundry’ done')
     await input.press('Enter')
-    await expect(toast(page)).toContainText('Done')
+    await expect(page.locator('.toast', { hasText: 'Done' }).last()).toBeVisible()
 
+    // Focus went back to the capture box, where '?' is just typing.
+    await page.locator('body').click({ position: { x: 600, y: 5 } })
     await page.keyboard.press('?')
     await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible()
   })

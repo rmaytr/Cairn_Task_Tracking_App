@@ -122,7 +122,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           const p = previewCapture(intent.text, null, areas)
           if (!p) return null
           const bits = [p.due ? ` for ${formatDue(p.due, now).toLowerCase()}` : '', ` · ${areaName(p.areaId)}`]
-          return { id: 'best-add', section: 'Best guess', icon: 'plus', label: `Add ${quote(p.title)}${bits.join('')}`, run: close(() => addTask(intent.text)) }
+          return { id: 'best-add', section: 'Best guess', icon: 'plus', label: `Add ${quote(p.title)}${bits.join('')}`, run: close(() => {
+              if (addTask(intent.text)) st.showToast(`Added to ${areaName(p.areaId)}`)
+            }) }
         }
         case 'done':
           return t && { id: 'best', section: 'Best guess', icon: 'doneAll', label: `Mark ${title} done`, run: close(() => st.setDone(t.id, true)) }

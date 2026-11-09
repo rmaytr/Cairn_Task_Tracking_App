@@ -72,8 +72,15 @@ export function useAddTask(): (text: string, forcedAreaId?: string | null) => st
 }
 
 /** One at a time, so a long dump doesn't fire a burst of assistant requests. */
+/** The shared beta proxy allows ~150 requests a day per visitor, so one paste can't spend it all. */
+export const MAX_DUMP_SORTS = 12
+
 async function enrichInOrder(items: { id: string; text: string }[], areaLocked: boolean): Promise<void> {
-  for (const { id, text } of items) await enrichWithAssistant(id, text, areaLocked)
+  // Lines past the cap keep their local parse (area, date, priority); they just aren't AI-sorted.
+  for (const { id, text } of items.slice(0, MAX_DUMP_SORTS)) {
+    // One error toast is enough: after a failure (offline, daily limit) the rest keep their local parse.
+    if (!(await enrichWithAssistant(id, text, areaLocked))) return
+  }
 }
 
 /**

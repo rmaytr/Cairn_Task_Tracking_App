@@ -58,9 +58,10 @@ function summary(s: AiTaskSuggestion, areas: Area[], extra: number): string {
  * and how it fits with existing tasks. Applied as one undoable change. Edits the user makes
  * while the assistant is thinking always win.
  */
-export async function enrichWithAssistant(taskId: string, text: string, areaLocked: boolean): Promise<void> {
+/** Resolves false when the assistant failed (offline, daily limit), so a batch can stop asking. */
+export async function enrichWithAssistant(taskId: string, text: string, areaLocked: boolean): Promise<boolean> {
   const transport = await getTransport()
-  if (!transport) return
+  if (!transport) return false
   const store = useStore.getState()
   store.setAssistBusy(taskId, true)
   try {
@@ -69,7 +70,7 @@ export async function enrichWithAssistant(taskId: string, text: string, areaLock
     const result = await transport.analyze(text.slice(0, MAX_TEXT), buildContext(others, areas, new Date()))
     const latest = useStore.getState().tasks.find((t) => t.id === taskId)
     const [first, ...rest] = result.tasks
-    if (!latest || latest.done || !first) return
+    if (!latest || latest.done || !first) return true
     // If the user already edited the task, only add what's missing (steps); never overwrite.
     const touched = latest.updatedAt !== latest.createdAt
     const patch = touched ? {} : toPatch(first, latest, useStore.getState().areas, areaLocked)
@@ -81,9 +82,11 @@ export async function enrichWithAssistant(taskId: string, text: string, areaLock
       extras: touched ? [] : rest.map(toDraft),
       message: summary(first, useStore.getState().areas, touched ? 0 : rest.length),
     })
+    return true
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') return
+    if (error instanceof DOMException && error.name === 'AbortError') return false
     useStore.getState().showToast(assistantError(error))
+    return false
   } finally {
     useStore.getState().setAssistBusy(taskId, false)
   }

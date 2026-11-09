@@ -103,7 +103,7 @@ export function HomeView() {
   return (
     <div className="home">
       <header className="home__head">
-        <h1 className="home__hello display">{greeting(now)}.</h1>
+        <h1 className="home__hello display">{greeting(now).replace(/[^?]$/, '$&.')}</h1>
         <p className="home__finding">
           <span className="home__date">{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
           {' '}
