@@ -71,6 +71,12 @@ const ACTIONS: { id: ActionId; label: string; icon: IconName }[] = [
 
 const quote = (s: string): string => `‘${s}’`
 
+/** "for tomorrow", but "for Fri, Nov 13": only relative words read as lowercase mid-sentence. */
+const dueWords = (due: string, now: Date): string => {
+  const text = formatDue(due, now)
+  return /^(Today|Tomorrow|Yesterday)$/.test(text) ? text.toLowerCase() : text
+}
+
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const tasks = useStore((s) => s.tasks)
   const areas = useStore((s) => s.areas)
@@ -124,7 +130,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         case 'add': {
           const p = previewCapture(intent.text, null, areas)
           if (!p) return null
-          const bits = [p.due ? ` for ${formatDue(p.due, now).toLowerCase()}` : '', ` · ${areaName(p.areaId)}`]
+          const bits = [p.due ? ` for ${dueWords(p.due, now)}` : '', ` · ${areaName(p.areaId)}`]
           return { id: 'best-add', section: 'Best guess', icon: 'plus', label: `Add ${quote(p.title)}${bits.join('')}`, run: close(() => addTasks([intent.text])) }
         }
         case 'done':
@@ -134,7 +140,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         case 'move':
           return t && { id: 'best', section: 'Best guess', icon: 'move', label: `Move ${title} to ${areaName(intent.areaId)}`, run: close(() => st.moveTask(t.id, { areaId: intent.areaId }, `Moved to ${areaName(intent.areaId)}`)) }
         case 'reschedule':
-          return t && { id: 'best', section: 'Best guess', icon: 'calendar', label: `Set ${title} for ${formatDue(intent.due, now).toLowerCase()}`, run: close(() => st.rescheduleTask(t.id, intent.due)) }
+          return t && { id: 'best', section: 'Best guess', icon: 'calendar', label: `Set ${title} for ${dueWords(intent.due, now)}`, run: close(() => st.rescheduleTask(t.id, intent.due)) }
         case 'open':
           return t && { id: 'best', section: 'Best guess', icon: 'arrowRight', label: `Open ${title}`, run: close(() => openTask(t.id)) }
         case 'go':
