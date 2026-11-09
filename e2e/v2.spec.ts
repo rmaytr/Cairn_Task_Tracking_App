@@ -198,3 +198,27 @@ test.describe('task menu', () => {
     await expect(taskButton(projects, 'Call home')).toBeVisible()
   })
 })
+
+test.describe('command palette', () => {
+  test('guesses intent: add, done with undo, and the shortcuts sheet', async ({ page }) => {
+    await startEmpty(page)
+    await captureTask(page, 'Do laundry')
+    await page.keyboard.press('Control+k')
+    const palette = page.getByRole('dialog', { name: 'Command palette' })
+    const input = palette.getByRole('combobox')
+    await input.fill('call mom tomorrow')
+    await expect(palette.getByRole('option').first()).toContainText('Add ‘call mom’')
+    await input.press('Enter')
+    await expect(palette).toBeHidden()
+    await expect(taskButton(page, 'call mom')).toBeVisible()
+
+    await page.keyboard.press('Control+k')
+    await input.fill('done laundry')
+    await expect(palette.getByRole('option').first()).toContainText('Mark ‘Do laundry’ done')
+    await input.press('Enter')
+    await expect(toast(page)).toContainText('Done')
+
+    await page.keyboard.press('?')
+    await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible()
+  })
+})

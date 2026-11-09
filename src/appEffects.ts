@@ -80,7 +80,7 @@ export function useShortcuts(): void {
       } else if (e.key === 'Escape' && s.selectedId) {
         s.select(null)
       } else if (e.key === '?') {
-        s.setSettingsOpen(true)
+        s.setShortcutsOpen(true)
       } else if (e.key === 'z' && s.undoSnapshot) {
         s.undo()
       }

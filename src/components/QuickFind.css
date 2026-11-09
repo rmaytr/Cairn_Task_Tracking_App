@@ -60,3 +60,63 @@
   color: var(--ink-2);
   font-size: var(--step--1);
 }
+
+.find__group {
+  display: grid;
+  gap: 2px;
+}
+
+.find__heading {
+  margin: 8px 10px 2px;
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  font-weight: 500;
+}
+
+.find__group:first-child .find__heading {
+  margin-top: 0;
+}
+
+.find__item > svg {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.find__item[aria-selected='true'] > svg {
+  color: var(--ink);
+}
+
+.find__input:focus-visible,
+.find__item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.keys {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.keys__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+}
+
+.keys__row dt {
+  display: flex;
+  gap: 4px;
+}
+
+.keys__row dd {
+  margin: 0;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.keys__row.is-off {
+  opacity: 0.55;
+}
