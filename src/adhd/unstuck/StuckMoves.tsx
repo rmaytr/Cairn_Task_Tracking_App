@@ -113,7 +113,7 @@ export function IfThen({ task }: { task: Task }) {
   )
 }
 
-export function LessBoring() {
+export function LessBoring({ task }: { task: Task }) {
   const navigate = useStore((s) => s.navigate)
   const openRoom = useStore((s) => s.openRoom)
   const [treat, setTreat] = useState(false)
@@ -128,7 +128,7 @@ export function LessBoring() {
           </button>
         </li>
         <li>
-          <button type="button" className="stuck__choice" onClick={() => openRoom(null)}>
+          <button type="button" className="stuck__choice" onClick={() => openRoom(task.id)}>
             <Icon name="door" size={16} /> Race your past self in the Focus room
           </button>
         </li>

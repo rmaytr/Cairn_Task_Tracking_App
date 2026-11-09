@@ -329,6 +329,9 @@ function NowCard({ task, now, reason, summary, fromAssistant, onEndTimer, onFini
       )}
 
       <FocusTimer taskId={task.id} />
+      <button type="button" className="now__room" onClick={() => useStore.getState().openRoom(task.id)}>
+        <Icon name="door" size={15} /> Want sound and quiet company? Open the Focus room
+      </button>
 
       <div className="now__actions">
         <button type="button" className="btn btn--primary btn--lg now__done" onClick={finish}>

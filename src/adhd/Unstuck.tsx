@@ -134,7 +134,7 @@ function renderMove(blocker: Blocker, task: Parameters<typeof TinyStep>[0]['task
     case 'if-then':
       return <IfThen task={task} />
     case 'less-boring':
-      return <LessBoring />
+      return <LessBoring task={task} />
     case 'be-kind':
       return <BeKind task={task} />
     case 'pick-one':
