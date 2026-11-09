@@ -1,0 +1,282 @@
+/* I'm stuck, reward menu and move break. Tokens only, so every theme works. */
+.stuck,
+.treats,
+.mv {
+  display: grid;
+  gap: 14px;
+  max-width: 560px;
+}
+
+.stuck__steps {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.stuck__back {
+  justify-self: start;
+}
+
+.stuck__h {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 400;
+  outline-offset: 4px;
+}
+
+.stuck__lede {
+  color: var(--ink-2);
+  font-size: var(--step-0);
+  line-height: 1.5;
+}
+
+.stuck__task,
+.stuck__tip,
+.stuck__src {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+.stuck__pick {
+  font-size: var(--step-1);
+  font-weight: 560;
+}
+
+.stuck__kind {
+  padding: 14px 16px;
+  border-radius: var(--radius-m);
+  background: var(--primary-soft);
+  color: var(--primary-soft-ink);
+  line-height: 1.5;
+}
+
+.stuck__row,
+.stuck__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.stuck__form {
+  display: flex;
+  gap: 8px;
+}
+
+.stuck__form .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.stuck__label {
+  display: grid;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.stuck__choices {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stuck__choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--step-0);
+  text-align: left;
+}
+
+.stuck__choices--big .stuck__choice {
+  min-height: 56px;
+  font-size: var(--step-1);
+}
+
+.stuck__choice:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-3);
+}
+
+.stuck__chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--step--1);
+}
+
+.stuck__chip[aria-pressed='true'] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-soft-ink);
+}
+
+.stuck__saved {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--primary-soft-ink);
+  background: var(--primary-soft);
+  padding: 10px 14px;
+  border-radius: var(--radius-s);
+}
+
+.stuck__why {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.stuck__why small {
+  display: block;
+  color: var(--ink-3);
+  font-size: var(--step--2);
+}
+
+.stuck__choice:focus-visible,
+.stuck__chip:focus-visible,
+.stuck__h:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Reward menu ---------- */
+.treats__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.treats__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.treats__row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.treatpick {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.treatpick__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 560;
+}
+
+.treatpick__note {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+}
+
+/* ---------- Move break ---------- */
+.mv {
+  justify-items: center;
+  text-align: center;
+  container-type: inline-size;
+}
+
+.mv > * {
+  max-width: 100%;
+}
+
+.mvfig {
+  width: min(180px, 50cqw);
+  color: var(--primary);
+}
+
+.mv__count {
+  font-size: var(--step-4);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.mv__count small {
+  font-size: var(--step-0);
+  color: var(--ink-3);
+}
+
+.mv__controls {
+  justify-content: center;
+}
+
+.mv__seated {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+.mvfig__arm,
+.mvfig__leg,
+.mvfig__head,
+.mvfig__body,
+.mvfig__ring {
+  transform-box: fill-box;
+}
+
+.mvfig__arm--l,
+.mvfig__arm--r {
+  transform-origin: 100% 0;
+}
+
+.mvfig__arm--r {
+  transform-origin: 0 0;
+}
+
+.mvfig__leg {
+  transform-origin: 50% 0;
+}
+
+.mvfig__head {
+  transform-origin: 50% 100%;
+}
+
+.mvfig__ring {
+  transform-origin: center;
+}
+
+@keyframes mv-swing { 50% { transform: rotate(-35deg); } }
+@keyframes mv-swing-r { 50% { transform: rotate(35deg); } }
+@keyframes mv-lift { 50% { transform: translateY(-14px); } }
+@keyframes mv-tilt { 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
+@keyframes mv-shake { 50% { transform: rotate(14deg); } }
+@keyframes mv-breathe { 50% { transform: scale(1.18); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mvfig:not(.is-still).mvfig--shoulders .mvfig__arm--l { animation: mv-swing 2s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--shoulders .mvfig__arm--r { animation: mv-swing-r 2s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--reach .mvfig__arm { animation: mv-lift 2.4s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--march .mvfig__leg--l { animation: mv-swing 0.9s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--march .mvfig__leg--r { animation: mv-swing-r 0.9s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--neck .mvfig__head { animation: mv-tilt 4s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--hands .mvfig__arm { animation: mv-shake 0.4s ease-in-out infinite; }
+  .mvfig:not(.is-still).mvfig--breath .mvfig__ring { animation: mv-breathe 5s ease-in-out infinite; }
+}
