@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { previewCapture, useAddTask } from '../assist/useAddTask'
+import { previewCapture, useAddTasks } from '../assist/useAddTask'
 import { areaStyle, useAreaMap, useNow } from '../hooks'
 import { formatDue } from '../lib/dates'
-import { guessIntents, type ActionId, type GoTarget, type Intent } from '../lib/intent'
+import { guessIntents, themeForCommand, type ActionId, type GoTarget, type Intent } from '../lib/intent'
 import { compareUrgency, effectiveHorizon } from '../model/derive'
 import { HORIZON_LABEL, type Area, type Task } from '../model/types'
-import { THEMES, resolveTheme } from '../model/themes'
+import { resolveTheme } from '../model/themes'
 import { useStore } from '../store/useStore'
 import { Dialog } from './Dialog'
 import { Icon, type IconName } from './Icon'
@@ -14,7 +14,7 @@ import './QuickFind.css'
 const MAX_TASKS = 6
 const EMPTY_TASKS = 5
 
-type Section = 'Best guess' | 'Tasks' | 'Go to' | 'Actions'
+type Section = 'Best guess' | 'Tasks' | 'Add' | 'Go to' | 'Actions'
 
 interface Item {
   id: string
@@ -65,6 +65,8 @@ const ACTIONS: { id: ActionId; label: string; icon: IconName }[] = [
   { id: 'reset', label: 'Weekly reset', icon: 'reset' },
   { id: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keyboard' },
   { id: 'theme', label: 'Switch light/dark', icon: 'sun' },
+  { id: 'dark-mode', label: 'Dark mode', icon: 'sun' },
+  { id: 'light-mode', label: 'Light mode', icon: 'sun' },
 ]
 
 const quote = (s: string): string => `‘${s}’`
@@ -73,7 +75,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const tasks = useStore((s) => s.tasks)
   const areas = useStore((s) => s.areas)
   const view = useStore((s) => s.view)
-  const addTask = useAddTask()
+  const addTasks = useAddTasks()
   const areaMap = useAreaMap()
   const now = useNow()
   const [query, setQuery] = useState('')
@@ -106,9 +108,10 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       else if (id === 'reset') st.navigate({ view: 'reset', area: null })
       else if (id === 'shortcuts') st.setShortcutsOpen(true)
       else {
-        const current = resolveTheme(st.prefs.theme, window.matchMedia('(prefers-color-scheme: dark)').matches)
-        const dark = THEMES.find((t) => t.id === current)?.dark ?? false
-        st.setPrefs({ theme: dark ? 'stone' : 'night' })
+        // Read prefs now: `st` is the snapshot this list was built from.
+        const current = resolveTheme(useStore.getState().prefs.theme, window.matchMedia('(prefers-color-scheme: dark)').matches)
+        const next = themeForCommand(id, current)
+        if (next !== current) st.setPrefs({ theme: next })
       }
     }
     const goLabel = (target: GoTarget): string =>
@@ -122,9 +125,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           const p = previewCapture(intent.text, null, areas)
           if (!p) return null
           const bits = [p.due ? ` for ${formatDue(p.due, now).toLowerCase()}` : '', ` · ${areaName(p.areaId)}`]
-          return { id: 'best-add', section: 'Best guess', icon: 'plus', label: `Add ${quote(p.title)}${bits.join('')}`, run: close(() => {
-              if (addTask(intent.text)) st.showToast(`Added to ${areaName(p.areaId)}`)
-            }) }
+          return { id: 'best-add', section: 'Best guess', icon: 'plus', label: `Add ${quote(p.title)}${bits.join('')}`, run: close(() => addTasks([intent.text])) }
         }
         case 'done':
           return t && { id: 'best', section: 'Best guess', icon: 'doneAll', label: `Mark ${title} done`, run: close(() => st.setDone(t.id, true)) }
@@ -146,9 +147,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     }
 
     const best = words.length ? guessIntents(query, { tasks, areas, now })[0] : undefined
-    const out: Item[] = []
     const bestItem = best && describe(best)
-    if (bestItem) out.push(bestItem)
+    const taskItems: Item[] = []
 
     const pool = tasks.filter((t) => !t.done || words.length > 0)
     const found = words.length
@@ -159,7 +159,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           .map((r) => r.t)
       : [...pool].sort((a, b) => compareUrgency(a, b, now)).slice(0, EMPTY_TASKS)
     for (const t of found.slice(0, MAX_TASKS)) {
-      out.push({
+      taskItems.push({
         id: `task-${t.id}`,
         section: 'Tasks',
         icon: 'check',
@@ -170,6 +170,12 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         run: close(() => openTask(t.id)),
       })
     }
+
+    // A search that finds tasks is most likely looking for one, so adding a new task ranks below them.
+    const out: Item[] =
+      bestItem?.id === 'best-add' && taskItems.length > 0
+        ? [...taskItems, { ...bestItem, section: 'Add' }]
+        : [...(bestItem ? [bestItem] : []), ...taskItems]
 
     const places: { target: GoTarget; icon: IconName }[] = [
       { target: 'home', icon: 'home' },
@@ -185,7 +191,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       if (matchesWords(a.label, words)) out.push({ id: `action-${a.id}`, section: 'Actions', icon: a.icon, label: a.label, run: close(() => runAction(a.id)) })
     }
     return out
-  }, [query, tasks, areas, areaMap, now, view, addTask, onDone])
+  }, [query, tasks, areas, areaMap, now, view, addTasks, onDone])
 
   const current = Math.min(active, Math.max(items.length - 1, 0))
   const activeId = items[current] ? `pal-${items[current].id}` : undefined
@@ -194,19 +200,25 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   }, [activeId])
 
   const onKeyDown = (e: KeyboardEvent): void => {
+    // Safari's Enter that confirms an IME word has isComposing false but keyCode 229.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActive(Math.min(current + 1, items.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActive(Math.max(current - 1, 0))
-    } else if (e.key === 'Enter' && !e.nativeEvent.isComposing && items[current]) {
+    } else if ((e.key === 'Home' || e.key === 'End') && items.length > 0) {
+      e.preventDefault()
+      setActive(e.key === 'Home' ? 0 : items.length - 1)
+    } else if (e.key === 'Enter' && items[current]) {
       e.preventDefault()
       items[current].run()
     }
   }
 
-  const sections = (['Best guess', 'Tasks', 'Go to', 'Actions'] as const).filter((s) => items.some((i) => i.section === s))
+  // In ranked order, so the arrow keys and the list agree.
+  const sections = [...new Set(items.map((i) => i.section))]
 
   return (
     <div className="dialog__body find">
@@ -224,7 +236,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         aria-label="Type a task, a command, or search"
         role="combobox"
         aria-autocomplete="list"
-        aria-expanded
+        aria-expanded={items.length > 0}
         aria-controls="find-results"
         aria-activedescendant={activeId}
       />
@@ -243,7 +255,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
                   aria-selected={i === current}
                   className="find__item"
                   style={areaStyle(item.area)}
-                  onMouseEnter={() => setActive(i)}
+                  // Move, not enter: a list scrolling under a still pointer must not steal the selection.
+                  onMouseMove={() => setActive(i)}
                   onClick={item.run}
                 >
                   {item.area ? <span className="dot" /> : <Icon name={item.icon} size={18} />}
@@ -255,6 +268,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           </div>
         ))}
       </div>
+      <p className="visually-hidden" role="status">
+        {items.length === 0 ? 'No results' : `${items.length} ${items.length === 1 ? 'result' : 'results'}`}
+      </p>
       <p className="find__hint">
         <span className="kbd">↑</span> <span className="kbd">↓</span> to move, <span className="kbd">Enter</span> to do it
       </p>

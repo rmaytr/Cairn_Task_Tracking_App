@@ -33,7 +33,15 @@
 
 .find__item[aria-selected='true'] {
   background: var(--surface-2);
-  box-shadow: inset 3px 0 0 var(--c);
+  box-shadow: inset 3px 0 0 var(--c, var(--primary));
+}
+
+/* A shape cue as well as colour: the row Enter will run shows the Enter key. */
+.find__item[aria-selected='true']::after {
+  flex: none;
+  content: '↵';
+  content: '↵' / '';
+  color: var(--ink-2);
 }
 
 .find__title {

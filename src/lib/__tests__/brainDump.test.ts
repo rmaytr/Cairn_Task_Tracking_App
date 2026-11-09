@@ -40,6 +40,11 @@ describe('splitLines', () => {
     expect(splitLines('buy milk; call mom ;; pay rent')).toEqual(['buy milk', 'call mom', 'pay rent'])
   })
 
+  it('keeps a semicolon inside a link', () => {
+    expect(splitLines('read https://example.com/a;b=1?x=2;y=3')).toEqual(['read https://example.com/a;b=1?x=2;y=3'])
+    expect(splitLines('read https://example.com/a;b=1; call mom')).toEqual(['read https://example.com/a;b=1', 'call mom'])
+  })
+
   it('drops headings that end with a colon and markdown headings', () => {
     expect(splitLines('Groceries:\n- milk\n- eggs\n## This week\nCall mom')).toEqual(['milk', 'eggs', 'Call mom'])
   })
@@ -94,6 +99,7 @@ describe('guessSplit', () => {
     'Pros and cons list for the internship',
     '',
     'buy milk',
+    'check https://example.com/?a=1;buy=2',
   ])('does not split %j', (line) => {
     expect(guessSplit(line)).toBeNull()
   })

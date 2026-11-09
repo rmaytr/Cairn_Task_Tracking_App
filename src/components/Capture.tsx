@@ -1,6 +1,7 @@
 import { useDeferredValue, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { previewCapture, useAddTask, useAddTasks, type CapturePreview } from '../assist/useAddTask'
 import { findSimilar, guessSplit, splitLines } from '../lib/brainDump'
+import { formatDue } from '../lib/dates'
 import { REPEAT_LABEL } from '../model/repeat'
 import { EFFORT_LABEL, type Area } from '../model/types'
 import { areaStyle, useAreaMap, useMediaQuery, useNow } from '../hooks'
@@ -21,8 +22,25 @@ interface CaptureProps {
 const HINT = 'Try “Finish lab report by Friday”'
 /** Long enough for a pasted list; each line is still cut to a task title on save. */
 const MAX_CHARS = 4000
+/** Parsed brain-dump lines kept between keystrokes; cleared past this so typing can't grow it forever. */
+const MAX_CACHED_LINES = 500
+const KEYS_HINT = 'Enter adds, Shift+Enter for a new line.'
 const TALL_SLACK_PX = 4
 const FIELD_SIZING = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content')
+
+const parsedLines = new WeakMap<Area[], Map<string, CapturePreview | null>>()
+
+/** A keystroke changes one line of a brain dump, so the other lines reuse their parse (per areas list and day). */
+function previewLine(line: string, forced: string | null, areas: Area[], day: string): CapturePreview | null {
+  let cache = parsedLines.get(areas)
+  if (!cache || cache.size > MAX_CACHED_LINES) {
+    cache = new Map()
+    parsedLines.set(areas, cache)
+  }
+  const key = `${day}|${forced ?? ''}|${line}`
+  if (!cache.has(key)) cache.set(key, previewCapture(line, forced, areas))
+  return cache.get(key) ?? null
+}
 
 /**
  * A text box that grows. Enter saves immediately; area, date and priority are inferred and
@@ -32,6 +50,8 @@ const FIELD_SIZING = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 
 export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: CaptureProps) {
   const [text, setText] = useState('')
   const [override, setOverride] = useState<string | null>(null)
+  /** Said once by the status region after × drops a line. */
+  const [removed, setRemoved] = useState<string | null>(null)
   const areas = useStore((s) => s.areas)
   const tasks = useStore((s) => s.tasks)
   const ai = useStore((s) => s.prefs.ai)
@@ -42,24 +62,24 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
   const addMany = useAddTasks()
   const now = useNow()
   const forced = override ?? areaId
-  const previewId = useId()
+  const hintId = useId()
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Recomputes on every keystroke; parsing a few lines is cheap.
   const lines = useMemo(() => splitLines(text), [text])
   const single = lines.length === 1 ? (lines[0] ?? '') : ''
   const preview = useMemo(() => previewCapture(single, forced, areas), [single, forced, areas])
   const many = lines.length > 1
+  const day = now.toDateString()
   // `index` points back into `lines` so × can drop exactly that line.
   const rows = useMemo(
     () =>
       many
         ? lines.flatMap((line, index) => {
-            const row = previewCapture(line, forced, areas)
+            const row = previewLine(line, forced, areas, day)
             return row?.title.trim() ? [{ index, row }] : []
           })
         : [],
-    [many, lines, forced, areas],
+    [many, lines, forced, areas, day],
   )
   const split = useMemo(() => (single ? guessSplit(single) : null), [single])
   // Comparing against every task can lag on big lists; let typing win.
@@ -82,6 +102,7 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
   const reset = (): void => {
     setText('')
     setOverride(null)
+    setRemoved(null)
   }
 
   const replaceText = (next: string): void => {
@@ -107,7 +128,8 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
-    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
+    // Safari's Enter that confirms an IME word has isComposing false but keyCode 229.
+    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing || e.keyCode === 229) return
     e.preventDefault()
     e.currentTarget.form?.requestSubmit()
   }
@@ -120,6 +142,22 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
   }
 
   const count = `${rows.length} ${rows.length === 1 ? 'task' : 'tasks'}`
+  // maxLength cuts a long paste silently; say so.
+  const atLimit = text.length >= MAX_CHARS
+  const limitNote = `That’s the ${MAX_CHARS.toLocaleString()}-character limit, so the end of a long paste was left out.`
+  // Short spoken summary; the preview itself holds controls, so it is not a live region.
+  const summary = many
+    ? count
+    : preview
+      ? [
+          `Area ${area?.name ?? ''}`,
+          preview.due && `due ${formatDue(preview.due, now)}`,
+          duplicate && `already on your list as ‘${duplicate.title}’`,
+        ]
+          .filter(Boolean)
+          .join(', ')
+      : ''
+  const status = [removed, summary, atLimit && limitNote].filter(Boolean).join('. ')
 
   return (
     <form className={`capture capture--${variant}`} onSubmit={submit} aria-label="Add a task">
@@ -133,11 +171,14 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
           className="capture__input"
           rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value)
+            setRemoved(null)
+          }}
           onKeyDown={onKeyDown}
           placeholder={variant === 'hero' ? 'What’s on your mind?' : 'What do you need to do?'}
           aria-label="New task"
-          aria-describedby={previewId}
+          aria-describedby={hintId}
           autoComplete="off"
           enterKeyHint="done"
           maxLength={MAX_CHARS}
@@ -149,7 +190,14 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
           {phone && <span className="visually-hidden">{many ? `Add ${count}` : 'Add task'}</span>}
         </button>
       </div>
-      <div className="capture__preview" id={previewId} aria-live="polite">
+      <span className="visually-hidden" id={hintId}>
+        {KEYS_HINT}
+      </span>
+      <span className="visually-hidden" role="status">
+        {status}
+      </span>
+      <div className="capture__preview">
+        {atLimit && <span className="capture__hint capture__limit">{limitNote}</span>}
         {many ? (
           <span className="capture__count">
             {count} <span className="capture__hint">· Enter adds them all</span>
@@ -204,7 +252,10 @@ export function Capture({ variant, areaId = null, onAdded, autoFocus = false }: 
               row={row}
               area={areaMap.get(row.areaId)}
               now={now}
-              onDrop={() => replaceText(lines.filter((_, j) => j !== index).join('\n'))}
+              onDrop={() => {
+                replaceText(lines.filter((_, j) => j !== index).join('\n'))
+                setRemoved(`Removed ‘${row.title}’`)
+              }}
             />
           ))}
         </ul>

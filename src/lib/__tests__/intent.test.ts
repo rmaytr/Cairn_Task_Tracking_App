@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeTask, NOW } from '../../plan/__tests__/fixtures'
-import { guessIntents, type Intent } from '../intent'
+import { guessIntents, themeForCommand, type Intent } from '../intent'
 import { DEFAULT_AREAS } from './areas'
 
 const tasks = [
@@ -92,5 +92,56 @@ describe('guessIntents', () => {
   it('suggests an action when the query names one', () => {
     expect(best('import')).toEqual({ kind: 'action', id: 'import' })
     expect(best('new area')).toEqual({ kind: 'action', id: 'new-area' })
+  })
+
+  it('opens the task a plain search names instead of adding a copy', () => {
+    expect(best('lab report')).toEqual({ kind: 'open', taskId: 'lab' })
+    expect(best('call mom')).toEqual({ kind: 'open', taskId: 'mom' })
+  })
+
+  it('goes to a place named exactly, without a verb', () => {
+    expect(best('today')).toEqual({ kind: 'go', target: 'home' })
+    expect(best('focus')).toEqual({ kind: 'go', target: 'focus' })
+    expect(best('Classes')).toEqual({ kind: 'go', target: 'area:classes' })
+  })
+
+  it('opens a task whose title starts with a done-verb instead of marking it done', () => {
+    const own = [makeTask('email', { title: 'Check email' }), ...tasks]
+    const c = { ...ctx, tasks: own }
+    expect(guessIntents('check email', c)[0]).toEqual({ kind: 'open', taskId: 'email' })
+    expect(best('finish history essay')).toEqual({ kind: 'open', taskId: 'essay' })
+    // Without the verb in the title, the verb still means done.
+    expect(best('done history essay')).toEqual({ kind: 'done', taskId: 'essay' })
+  })
+
+  it('reads "dark mode" and "light mode" as setting a side, "theme" as switching', () => {
+    expect(best('dark mode')).toEqual({ kind: 'action', id: 'dark-mode' })
+    expect(best('light')).toEqual({ kind: 'action', id: 'light-mode' })
+    expect(best('theme')).toEqual({ kind: 'action', id: 'theme' })
+  })
+
+  it('does not guess between two tasks that match equally well', () => {
+    const twins = [
+      makeTask('hist', { title: 'Finish the history essay' }),
+      makeTask('eng', { title: 'Finish the english essay' }),
+    ]
+    expect(guessIntents('done essay', { ...ctx, tasks: twins })[0]).toEqual({ kind: 'add', text: 'done essay' })
+  })
+})
+
+describe('themeForCommand', () => {
+  it('keeps the current theme when it is already the asked-for side', () => {
+    expect(themeForCommand('dark-mode', 'dusk')).toBe('dusk')
+    expect(themeForCommand('light-mode', 'notes')).toBe('notes')
+  })
+
+  it('switches to the default theme of the other side', () => {
+    expect(themeForCommand('dark-mode', 'notes')).toBe('night')
+    expect(themeForCommand('light-mode', 'ink')).toBe('stone')
+  })
+
+  it('toggles for "theme"', () => {
+    expect(themeForCommand('theme', 'moss')).toBe('night')
+    expect(themeForCommand('theme', 'dusk')).toBe('stone')
   })
 })
