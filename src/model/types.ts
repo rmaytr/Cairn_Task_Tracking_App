@@ -76,6 +76,8 @@ export interface Task {
   repeatOf?: string
   /** First due date of a monthly series, so month-end dates don't drift. */
   repeatAnchor?: string
+  /** How many times "Not now" pushed it back (missing on old data = 0). */
+  snoozes?: number
   /** Ids of tasks that should be finished before this one ("do after"). */
   after?: string[]
 }

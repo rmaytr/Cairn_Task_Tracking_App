@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useAreaMap, useNow, useSwipeHint, areaStyle } from '../hooks'
 import { daysBetween, formatDue, todayISO } from '../lib/dates'
 import { doneThisWeek, effectiveHorizon, nextStep } from '../model/derive'
+import { moveAllToToday, notNow, overdueTasks, spreadOverWeek } from '../model/freshStart'
 import type { Task } from '../model/types'
 import { orderTasks } from '../plan/order'
 import { headsUp } from '../reminders/reminders'
@@ -21,6 +22,8 @@ const WEEK_VISIBLE = 5
 /** With fewer open tasks than this, Today offers the sample tasks. */
 const SAMPLE_OFFER_BELOW = 5
 const WEEK_MS = 7 * 86_400_000
+const DONE_VISIBLE = 6
+const FRESH_START_MIN = 2
 
 function greeting(now: Date): string {
   const h = now.getHours()
@@ -80,6 +83,14 @@ export function HomeView() {
   const [perm, requestPermission] = useNotificationPermission()
   const todayKey = todayISO(now)
   const open = visible.filter((t) => !t.done)
+  const slipped = useMemo(() => overdueTasks(visible, now), [visible, now])
+  const doneToday = useMemo(
+    () =>
+      visible
+        .filter((t) => t.done && t.doneAt !== null && todayISO(new Date(t.doneAt)) === todayKey)
+        .sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0)),
+    [visible, todayKey],
+  )
   const counts: { label: string; value: number; tone?: 'overdue' }[] = [
     { label: 'Due today', value: open.filter((t) => t.due === todayKey).length },
     { label: 'This week', value: open.filter((t) => effectiveHorizon(t, now) === 'week').length },
@@ -117,6 +128,8 @@ export function HomeView() {
       </dl>
 
       <div className="home__grid">
+        {slipped.length >= FRESH_START_MIN && <FreshStart tasks={slipped} now={now} />}
+
         {next ? (
           <section className="panel home__next" aria-labelledby="next-h">
             <div className="home__panel-head">
@@ -182,6 +195,8 @@ export function HomeView() {
           </section>
         )}
 
+        {doneToday.length > 0 && <DoneToday tasks={doneToday} />}
+
         {openCount > 0 && openCount < SAMPLE_OFFER_BELOW && (
           <section className="panel home__sample" aria-labelledby="sample-h">
             <div>
@@ -205,6 +220,66 @@ export function HomeView() {
         )}
       </div>
     </div>
+  )
+}
+
+/** Many overdue tasks: one calm offer to start over, not a wall of red. */
+function FreshStart({ tasks, now }: { tasks: Task[]; now: Date }) {
+  const patchTasks = useStore((s) => s.patchTasks)
+  const [dismissed, setDismissed] = useState(false)
+  if (dismissed) return null
+  const n = tasks.length
+  const things = `${n} ${n === 1 ? 'thing' : 'things'}`
+  return (
+    <section className="panel home__reset home__fresh" aria-labelledby="fresh-h">
+      <div>
+        <h2 id="fresh-h">{n} things slipped. That’s okay.</h2>
+        <p>Pick a fresh start. Nothing is lost, and you can undo it.</p>
+      </div>
+      <div className="home__fresh-actions">
+        <button type="button" className="btn btn--primary" onClick={() => patchTasks(moveAllToToday(tasks, now), `Moved ${things} to today`)}>
+          <Icon name="move" size={16} /> Move all to today
+        </button>
+        <button type="button" className="btn" onClick={() => patchTasks(spreadOverWeek(tasks, now), `Spread ${things} over this week`)}>
+          <Icon name="calendar" size={16} /> Spread over this week
+        </button>
+        <button type="button" className="btn btn--ghost" onClick={() => patchTasks(notNow(tasks), `Moved ${things} to Someday`)}>
+          Not now
+        </button>
+        <button type="button" className="icon-btn" onClick={() => setDismissed(true)} aria-label="Hide for now" title="Hide for now">
+          <Icon name="close" size={16} />
+        </button>
+      </div>
+    </section>
+  )
+}
+
+/** What you finished today, newest first; the checkbox puts one back. */
+function DoneToday({ tasks }: { tasks: Task[] }) {
+  const setDone = useStore((s) => s.setDone)
+  const [all, setAll] = useState(false)
+  const shown = all ? tasks : tasks.slice(0, DONE_VISIBLE)
+  return (
+    <section className="panel home__done" aria-labelledby="done-h">
+      <h2 id="done-h">
+        Done today <span className="num home__count">{tasks.length}</span>
+      </h2>
+      <ul className="home__done-list">
+        {shown.map((t) => (
+          <li key={t.id}>
+            <label>
+              <input type="checkbox" className="check" checked onChange={() => setDone(t.id, false)} aria-label={`Mark not done: ${t.title}`} />
+              <span>{t.title}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {tasks.length > DONE_VISIBLE && (
+        <button type="button" className="btn btn--ghost btn--sm home__more" onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `+${tasks.length - DONE_VISIBLE} more`}
+        </button>
+      )}
+    </section>
   )
 }
 

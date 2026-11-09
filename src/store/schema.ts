@@ -26,6 +26,7 @@ export const taskSchema = z.object({
   repeatOf: z.string().optional().catch(undefined),
   low: z.boolean().optional().catch(undefined),
   after: z.array(z.string()).optional().catch(undefined).transform((ids) => ids?.slice(0, 50)),
+  snoozes: z.number().int().nonnegative().optional().catch(undefined),
   repeatAnchor: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
 })
 
@@ -56,6 +57,8 @@ export const prefsSchema = z.object({
   firedReminders: z.array(z.string()).catch([]).transform((keys) => keys.slice(-1000)),
   /** AI assistant: off, the shared proxy, or the user's own API key (stored separately, never synced). */
   ai: z.enum(['off', 'proxy', 'byok']).catch(openProxy ? 'proxy' : 'off'),
+  /** Finishing feedback: a soft tock sound (off by default) and a short haptic tick. */
+  feedback: z.object({ sound: z.boolean(), haptics: z.boolean() }).catch({ sound: false, haptics: true }),
   /** "Plan my day" order from the assistant, used on the day it was made. */
   dayPlan: z
     .object({ date: z.string(), ids: z.array(z.string()).max(200), summary: z.string().max(300) })
@@ -75,6 +78,7 @@ export const DEFAULT_PREFS: Prefs = {
   reminders: { enabled: true, morningHour: 9, eveningHour: 18 },
   firedReminders: [],
   ai: openProxy ? 'proxy' : 'off',
+  feedback: { sound: false, haptics: true },
   dayPlan: null,
 }
 

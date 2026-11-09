@@ -97,6 +97,8 @@ interface Actions {
   moveTask: (id: string, to: { horizon?: Horizon; areaId?: string }, label?: string) => void
   /** "Not now": one day later, or one bucket out for an undated task. Undoable. */
   snoozeTask: (id: string) => void
+  /** Applies several task patches as one undoable change (Home's fresh start). */
+  patchTasks: (patches: { id: string; patch: Partial<Task> }[], message: string) => void
   setDone: (id: string, done: boolean) => void
   deleteTask: (id: string) => void
   addStep: (taskId: string, title: string) => void
@@ -253,7 +255,7 @@ export const useStore = create<StoreState>()(
           const task = get().tasks.find((t) => t.id === id)
           if (!task || task.done) return
           const { patch, label } = snooze(task, new Date())
-          withUndo(label, () => mapTask(id, (t) => touch(t, patch)))
+          withUndo(label, () => mapTask(id, (t) => touch(t, { ...patch, snoozes: (t.snoozes ?? 0) + 1 })))
         },
 
         moveTask: (id, to, label) => {
@@ -262,6 +264,14 @@ export const useStore = create<StoreState>()(
           const same = (to.horizon ?? task.horizon) === task.horizon && (to.areaId ?? task.areaId) === task.areaId
           if (same) return
           withUndo(label ?? 'Moved', () => mapTask(id, (t) => touch(t, to)))
+        },
+
+        patchTasks: (patches, message) => {
+          const byId = new Map(patches.map((p) => [p.id, p.patch]))
+          if (byId.size === 0) return
+          withUndo(message, () =>
+            set((s) => ({ tasks: s.tasks.map((t) => (byId.has(t.id) ? touch(t, byId.get(t.id) ?? {}) : t)) })),
+          )
         },
 
         setDone: (id, done) => {
