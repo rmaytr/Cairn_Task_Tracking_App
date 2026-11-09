@@ -101,6 +101,11 @@
   color: var(--ink-3);
 }
 
+/* Its own row above the preview, so it never squeezes the area picker. */
+.capture__limit {
+  flex-basis: 100%;
+}
+
 .capture__area {
   position: relative;
   display: inline-flex;

@@ -7,6 +7,17 @@ const MARKER = /^(?:[-*+•–—]|\d{1,3}[.)])(?:\s+|$)/
 const CHECKBOX = /^\[([ xX]?)\](?:\s+|$)/
 const HEADING = /^#{1,6}\s|:$/
 
+/** A link, ending before trailing punctuation so "see https://x.com; call mom" still splits. */
+const LINK = /\b(?:https?:\/\/|www\.)\S*[^\s;,.!?)]/gi
+
+/** `text.split(separator)` that never cuts inside a link (links may contain ";" and ","). */
+function splitOutsideLinks(text: string, separator: RegExp): string[] {
+  const links: string[] = []
+  // A private-use character never comes from a keyboard, so it safely marks where each link was.
+  const masked = text.replace(LINK, (link) => `${links.push(link) - 1}`)
+  return masked.split(separator).map((piece) => piece.replace(/(\d+)/g, (_, i: string) => links[Number(i)] ?? ''))
+}
+
 /** One pasted line (without list marker or checkbox), or null when it is not a task. */
 function cleanLine(raw: string): string | null {
   const line = raw.trim().replace(MARKER, '')
@@ -23,7 +34,7 @@ function cleanLine(raw: string): string | null {
  * that one typed line is always kept: it is what the person meant to add.
  */
 export function splitLines(text: string): string[] {
-  const pieces = text.split(/\r?\n|;/)
+  const pieces = splitOutsideLinks(text, /\r?\n|;/)
   const lines = pieces.map(cleanLine).filter((line): line is string => line !== null)
   const typed = text.trim()
   return pieces.length === 1 && lines.length === 0 && typed !== '' ? [typed] : lines
@@ -60,7 +71,7 @@ const startsWithVerb = (s: string): boolean => VERBS.has((words(s)[0] ?? '').toL
  * 4" and "Write and submit the essay" stay whole.
  */
 export function guessSplit(line: string): string[] | null {
-  const tokens = line.trim().replace(FILLER, '').split(SEPARATOR)
+  const tokens = splitOutsideLinks(line.trim().replace(FILLER, ''), SEPARATOR)
   const parts: string[] = [tokens[0]?.trim() ?? '']
   let commas = 0
   for (let i = 1; i < tokens.length; i += 2) {

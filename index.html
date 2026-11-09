@@ -17,8 +17,10 @@
         const root = document.documentElement
         const saved = JSON.parse(localStorage.getItem('cairn-appearance') || '{}')
         const dark = matchMedia('(prefers-color-scheme: dark)').matches
-        root.dataset.theme = typeof saved.theme === 'string' && saved.theme !== 'system' ? saved.theme : dark ? 'night' : 'stone'
-        if (typeof saved.textSize === 'string') root.dataset.textSize = saved.textSize
+        // Only known values reach the attributes (keep in sync with THEMES and TEXT_SIZES in src/model/themes.ts).
+        const themes = ['stone', 'notes', 'moss', 'contrast', 'night', 'dusk', 'ink']
+        root.dataset.theme = themes.includes(saved.theme) ? saved.theme : dark ? 'night' : 'stone'
+        if (['default', 'large', 'larger'].includes(saved.textSize)) root.dataset.textSize = saved.textSize
       } catch {}
     </script>
   </head>
